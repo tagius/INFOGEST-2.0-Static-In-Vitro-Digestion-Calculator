@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFOGEST 2.0 Static In-Vitro Digestion Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="app">
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div class="header" style="position: relative;">
+  <div class="header-logo"><div class="dot"></div><span class="header-title">INFOGEST 2.0</span></div>
+  <span class="header-sub">Minekus et al., 2014 · Static</span>
+  <div class="hdiv"></div>
+  <div class="hfield header-samples"><label>Samples (n)</label>
+    <input type="number" id="nSamples" min="1" max="96" style="width:50px">
+    <span style="font-size:10px;color:var(--text-muted)">(stock = n+1)</span>
+  </div>
+  <div class="hdiv header-operator-divider"></div>
+  <div class="hfield header-operator"><label>Operator</label><input type="text" id="operator" class="text-input" placeholder="Name" style="width:105px"></div>
+  <div class="hdiv header-date-divider"></div>
+  <div class="hfield header-date"><label>Date</label><input type="text" id="expDate" class="text-input" placeholder="DD.MM.YYYY" style="width:95px"></div>
+  <div class="hdiv header-food-divider"></div>
+  <div class="toggle-group" id="food-mode-toggle">
+    <button class="toggle-btn active" onclick="setFoodMode('food', this)">Food</button>
+    <button class="toggle-btn" onclick="setFoodMode('algae', this)">Algae</button>
+  </div>
+  <div class="header-actions">
+    <button id="btn-reset" class="btn btn-ghost"><span>↺</span> <span>Reset</span></button>
+    <button id="btn-export" class="btn btn-export"><span>⬇</span> <span>Export .xlsx</span></button>
+    <button id="btn-export-json" class="btn btn-ghost">Export JSON</button>
+    <button id="btn-import-json" class="btn btn-ghost">Import JSON</button>
+    <button id="theme-toggle-btn" class="theme-toggle" title="Toggle theme">
+      <span class="icon-sun">☀️</span>
+      <span class="icon-moon">🌙</span>
+    </button>
+  </div>
+  
+  <!-- Compact menu button & dropdown -->
+  <button id="header-menu-toggle" class="header-menu-toggle" title="More options">⋮</button>
+  <div id="header-menu" class="header-menu">
+    <div class="hfield"><label>Operator</label><input type="text" id="operator-menu" class="text-input" placeholder="Name"></div>
+    <div class="hfield"><label>Date</label><input type="text" id="expDate-menu" class="text-input" placeholder="DD.MM.YYYY"></div>
+    <div class="header-menu-divider"></div>
+    <button id="btn-reset-menu" class="btn btn-ghost">↺ Reset</button>
+    <button id="btn-export-menu" class="btn btn-export">⬇ Export .xlsx</button>
+    <button id="btn-export-json-menu" class="btn btn-ghost">Export JSON</button>
+    <button id="btn-import-json-menu" class="btn btn-ghost">Import JSON</button>
+  </div>
+</div>
+
+<!-- ═══════════════ STEPPER ═══════════════ -->
+<div class="stepper">
+  <div class="step-tab active" id="tab-0">
+    <span class="step-num">1</span>
+    <span class="step-label">Oral</span>
+    <span class="step-badge">pH 7.0 · 2 min</span>
+  </div>
+  <div class="step-conn">›</div>
+  <div class="step-tab" id="tab-1">
+    <span class="step-num">2</span>
+    <span class="step-label">Gastric</span>
+    <span class="step-badge">pH 3.0 · 120 min</span>
+  </div>
+  <div class="step-conn">›</div>
+  <div class="step-tab" id="tab-2">
+    <span class="step-num">3</span>
+    <span class="step-label">Intestinal</span>
+    <span class="step-badge">pH 7.0 · 120 min</span>
+  </div>
+  <div class="stepper-legend">
+    <span><span class="legend-swatch" style="background:var(--calc-bg);border:1px solid var(--border);"></span>Calculated</span>
+    <span><span class="legend-swatch" style="background:#fff;border:1px solid var(--border);"></span>Input</span>
+    <span><span class="legend-swatch" style="background:var(--mastermix-bg);border:1px solid var(--mastermix-border);"></span>Mastermix</span>
+  </div>
+</div>
+
+<!-- ═══════════════ CONTENT ═══════════════ -->
+<div class="content">
+
+<!-- ══════════════════════════════════════════
+     PHASE 0 — ORAL
+══════════════════════════════════════════ -->
+<div class="phase-panel active" id="phase-0">
+
+  <!-- Left: Composition -->
+  <div class="panel">
+    <div class="section-header">
+      <span class="panel-title">Phase Composition</span>
+      <div class="toggle-group" id="oral-mode-toggle">
+        <button class="toggle-btn active" onclick="setMode('oral','individual',this)">Individual</button>
+        <button class="toggle-btn" onclick="setMode('oral','mastermix',this)">Mastermix</button>
+      </div>
+    </div>
+
+    <table class="comp-table">
+      <thead><tr>
+        <th>Component</th>
+        <th class="r">Per sample</th>
+        <th>Unit</th>
+        <th class="r">Stock ×<span class="n1-span oral-n1">4</span></th>
+        <th>Unit</th>
+      </tr></thead>
+      <tbody>
+        <tr class="food-only">
+          <td><span class="comp-label"><span id="food-label">Food</span></span></td>
+          <td class="r"><input type="number" id="oral-food" min="0" step="0.1" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit comp-unit-food" id="oral-food-unit-sample">g or mL</span></td>
+          <td class="r"><span class="calc-value" id="oral-food-stk">—</span></td>
+          <td><span class="comp-unit" id="oral-food-unit">g or mL</span></td>
+        </tr>
+        <tr class="algae-only" style="display:none">
+          <td><span class="comp-label">Algae solution volume</span></td>
+          <td class="r"><input type="number" id="oral-food-algae" min="0" step="0.001" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit">g or mL</span></td>
+          <td class="r"><span class="calc-value" id="oral-food-algae-stk">—</span></td>
+          <td><span class="comp-unit">g or mL</span></td>
+        </tr>
+        <tr class="algae-only" style="display:none">
+          <td><span class="comp-label">Algae dry biomass</span></td>
+          <td class="r"><input type="number" id="oral-food-algae-biomass" min="0" step="1" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit">mg</span></td>
+          <td class="r"><span class="calc-value" id="oral-food-algae-biomass-stk">—</span></td>
+          <td><span class="comp-unit">mg</span></td>
+        </tr>
+        <!-- Individual rows -->
+        <tr class="oral-individual-row">
+          <td><span class="comp-label">SSF (1.25×)</span></td>
+          <td class="r"><span class="calc-value" id="oral-ssf-val">—</span></td>
+          <td><span class="comp-unit" id="oral-ssf-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="oral-ssf-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="oral-individual-row oral-amylase-row">
+          <td><span class="comp-label">Salivary amylase</span></td>
+          <td class="r"><span class="calc-value" id="oral-amylase-vol-val">—</span></td>
+          <td><span class="comp-unit" id="oral-amylase-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="oral-amylase-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="oral-individual-row">
+          <td><span class="comp-label">0.3 M CaCl₂</span></td>
+          <td class="r"><span class="calc-value" id="oral-cacl2">—</span></td>
+          <td><span class="comp-unit" id="cacl2-vol-unit-sample">µL</span></td>
+          <td class="r"><span class="calc-value" id="oral-cacl2-stk">—</span></td>
+          <td><span class="comp-unit">µL</span></td>
+        </tr>
+        <tr class="oral-individual-row">
+          <td><span class="comp-label">Water (mQ)</span></td>
+          <td class="r"><span class="calc-value" id="oral-water">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="oral-water-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+
+        <!-- Mastermix row (hidden in individual mode) -->
+        <tr class="oral-mastermix-row mm-row" style="display:none">
+          <td><span class="comp-label" style="color:var(--mastermix);font-weight:500">Oral mastermix</span></td>
+          <td class="r"><span class="calc-value mm" id="oral-mm-per-sample">—</span></td>
+          <td></td>
+          <td class="r"><span class="calc-value mm" id="oral-mm-stock">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="total-row">
+          <td><span class="comp-label">Total digest</span></td>
+          <td class="r"><span class="calc-value" id="oral-total-val">—</span></td>
+          <td></td>
+          <td class="r"><span class="calc-value" id="oral-total-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="sampling-row">
+          <td><span class="comp-label">Sampling (if any)</span></td>
+          <td class="r"><input type="number" id="oral-sampling" min="0" step="0.1" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="oral-sampling-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="total-row">
+          <td><span class="comp-label">Final volume →</span></td>
+          <td class="r"><span class="calc-value" id="oral-final">—</span></td>
+          <td></td>
+          <td class="r"><span class="calc-value" id="oral-final-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-row">
+      <div class="info-field"><label>pH</label><span class="calc-value" style="min-width:36px">7.0</span></div>
+      <div class="info-field"><label>Duration</label><input type="number" id="oral-duration" min="1" style="width:52px"><span class="unit">min</span></div>
+      <div class="info-field"><label>Temp.</label><input type="number" id="oral-temp" min="20" max="42" style="width:50px"><span class="unit">°C</span></div>
+      <div class="info-field"><label>Final [Ca²⁺]</label><input type="number" id="oral-ca-target" step="0.01" min="0" oninput="recalcAll()" style="width:60px"><span class="unit">mM</span></div>
+    </div>
+    <div class="warnings-area" id="oral-warnings"></div>
+  </div>
+
+  <!-- Right: Enzyme + optional Mastermix card -->
+  <div class="panel">
+    <span class="panel-title">Enzyme Preparation</span>
+    <div class="enzyme-list">
+
+      <!-- Oral Mastermix card (shown only in mastermix mode) -->
+      <div class="enzyme-card mm-card oral-mastermix-row" style="display:none" id="oral-mm-card">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Oral Mastermix</span>
+          <span class="enzyme-badge mm">Stock ×<span class="n1-span oral-n1">4</span> samples</span>
+        </div>
+        <div class="enzyme-body">
+          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:7px">Prepare the mastermix for all samples at once, then aliquot per sample.</p>
+          <table class="mm-table">
+            <tr><td>SSF</td><td class="mm-unit">mL</td><td><span id="oral-mm-ssf-stk">—</span></td></tr>
+            <tr id="oral-mm-amylase-row"><td>Salivary amylase solution</td><td class="mm-unit">mL</td><td><span id="oral-mm-amylase-stk">—</span></td></tr>
+            <tr><td>0.3 M CaCl₂</td><td class="mm-unit">µL</td><td><span id="oral-mm-cacl2-stk">—</span></td></tr>
+            <tr><td>Water (mQ)</td><td class="mm-unit">mL</td><td><span id="oral-mm-water-stk">—</span></td></tr>
+            <tr style="font-weight:600"><td>Total mastermix</td><td class="mm-unit">mL</td><td><span id="oral-mm-total-stk">—</span></td></tr>
+          </table>
+          <p style="font-size:10px;color:var(--text-muted);margin-top:6px">Aliquot <span id="oral-mm-aliquot">—</span> mL per sample. Mix gently before aliquoting.</p>
+        </div>
+      </div>
+
+      <!-- Salivary α-Amylase card -->
+      <div class="enzyme-card" id="oral-amylase-card">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Salivary α-Amylase</span>
+          <span class="enzyme-badge" id="oral-amylase-badge">Target: 75 U/mL</span>
+        </div>
+        <div class="enzyme-body">
+          <div class="oral-amylase-toggle-row">
+            <!-- Amylase source toggle (powder/solution) -->
+            <div class="amylase-source-toggle">
+              <span>Source</span>
+              <div class="toggle-group" id="amylase-source-toggle">
+                <button class="toggle-btn active" onclick="setAmylaseSource('powder', this)">Powder</button>
+                <button class="toggle-btn" onclick="setAmylaseSource('solution', this)">Solution</button>
+              </div>
+              <div class="toggle-group algae-only oral-salivary-carrier-toggle" id="oral-salivary-carrier-toggle" style="display:none">
+                <button class="toggle-btn active" onclick="setSalivaryCarrier('solution', this)">Saliv. sol.</button>
+                <button class="toggle-btn" onclick="setSalivaryCarrier('water', this)">Water</button>
+            </div>
+            </div>
+          </div>
+          <div class="enzyme-grid">
+            <div class="enzyme-field"><label>Product</label><input type="text" id="oral-amylase-product" class="text-input" placeholder="e.g. Sigma A1031"></div>
+            <div class="enzyme-field"><label>Lot No.</label><input type="text" id="oral-amylase-lot" class="text-input" placeholder="Lot #"></div>
+            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="oral-amylase-target" value="75" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field amylase-powder-field"><label>Measured activity (U/mg)</label><input type="number" id="oral-amylase-activity" placeholder="e.g. 1500" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field amylase-powder-field"><label>Powder purity %</label><input type="number" id="oral-amylase-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field amylase-solution-field" style="display:none"><label>Stock conc. (U/mL)</label><input type="number" id="oral-amylase-conc" placeholder="U/mL" step="0.1" min="0" oninput="recalcAll()"></div>
+          </div>
+          <div class="enzyme-calc-row amylase-powder-field">
+            <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="oral-amylase-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Min. weight — stock ×<span class="n1-span oral-n1">4</span></div><span class="calc-value" id="oral-amylase-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — per sample</div><input type="number" id="oral-amylase-eff" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="oral-amylase-eff-stk" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+          </div>
+          <div class="enzyme-calc-row">
+            <div><div class="ecalc-label">Dissolve in water — per sample</div><span class="calc-value" id="oral-amylase-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+            <div><div class="ecalc-label">Dissolve in water — stock</div><span class="calc-value" id="oral-amylase-diss-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+          </div>
+          <div class="warnings-area" id="oral-amylase-warnings"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /phase-0 -->
+
+
+<!-- ══════════════════════════════════════════
+     PHASE 1 — GASTRIC
+══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-1">
+
+  <!-- Left: Composition -->
+  <div class="panel">
+    <div class="section-header">
+      <span class="panel-title">Phase Composition</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div class="toggle-group" id="gastric-mode-toggle">
+          <button class="toggle-btn active" onclick="setMode('gastric','individual',this)">Individual</button>
+          <button class="toggle-btn" onclick="setMode('gastric','mastermix',this)">Mastermix</button>
+        </div>
+        <div class="toggle-group" id="gastric-enzyme-toggle">
+          <button class="toggle-btn active" onclick="setGastricEnzyme('rge',this)">RGE</button>
+          <button class="toggle-btn" onclick="setGastricEnzyme('pepsin',this)">Pepsin</button>
+        </div>
+      </div>
+    </div>
+
+    <table class="comp-table">
+      <thead><tr>
+        <th>Component</th>
+        <th class="r">Per sample</th>
+        <th>Unit</th>
+        <th class="r">Stock ×<span class="n1-span gastric-n1">4</span></th>
+        <th>Unit</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="comp-label">Oral chyme</span></td>
+          <td class="r"><span class="calc-value" id="gastric-oral-in">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-oral-in-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <!-- Individual rows -->
+        <tr class="gastric-individual-row">
+          <td><span class="comp-label">SGF (1.25×)</span></td>
+          <td class="r"><span class="calc-value" id="gastric-sgf-val">—</span></td>
+          <td><span class="comp-unit" id="gastric-sgf-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-sgf-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="gastric-individual-row" id="gastric-rge-row">
+          <td><span class="comp-label">RGE solution</span></td>
+          <td class="r"><span class="calc-value" id="gastric-rge-vol-val">—</span></td>
+          <td><span class="comp-unit" id="gastric-rge-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-rge-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <!-- Extra lipase row (shown when RGE + extra lipase toggled) -->
+        <tr class="gastric-individual-row" id="gastric-extralipase-row" style="display:none">
+          <td><span class="comp-label">Extra lipase solution</span></td>
+          <td class="r"><span class="calc-value" id="gastric-extralipase-vol-val">—</span></td>
+          <td><span class="comp-unit" id="gastric-extralipase-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-extralipase-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="gastric-individual-row" id="gastric-pepsin-row" style="display:none">
+          <td><span class="comp-label">Pepsin solution</span></td>
+          <td class="r"><span class="calc-value" id="gastric-pepsin-vol-val">—</span></td>
+          <td><span class="comp-unit" id="gastric-pepsin-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-pepsin-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="gastric-individual-row">
+          <td><span class="comp-label">0.3 M CaCl₂</span></td>
+          <td class="r"><span class="calc-value" id="gastric-cacl2">—</span></td>
+          <td><span class="comp-unit" id="cacl2-vol-unit-sample">µL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-cacl2-stk">—</span></td>
+          <td><span class="comp-unit">µL</span></td>
+        </tr>
+        <tr class="gastric-individual-row">
+          <td><span class="comp-label">Acid/base → pH 3.0</span></td>
+          <td class="r"><input type="number" id="gastric-acid" min="0" step="0.01" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-acid-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="gastric-individual-row">
+          <td><span class="comp-label">Water (mQ)</span></td>
+          <td class="r"><span class="calc-value" id="gastric-water">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-water-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <!-- Mastermix row -->
+        <tr class="gastric-mastermix-row mm-row" style="display:none">
+          <td><span class="comp-label" style="color:var(--mastermix);font-weight:500">Gastric mastermix</span></td>
+          <td class="r"><span class="calc-value mm" id="gastric-mm-per-sample">—</span></td>
+          <td></td>
+          <td class="r"><span class="calc-value mm" id="gastric-mm-stock">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="total-row">
+          <td><span class="comp-label">Total digest</span></td>
+          <td class="r"><span class="calc-value" id="gastric-total-val">—</span></td>
+          <td></td>
+          <td class="r"><span class="calc-value" id="gastric-total-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="sampling-row">
+          <td><span class="comp-label">Sampling (if any)</span></td>
+          <td class="r"><input type="number" id="gastric-sampling" min="0" step="0.1" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="gastric-sampling-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="total-row">
+          <td><span class="comp-label">Final volume →</span></td>
+          <td class="r"><span class="calc-value" id="gastric-final">—</span></td>
+          <td></td>
+          <td class="r"><span class="calc-value" id="gastric-final-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-row">
+      <div class="info-field"><label>pH</label><span class="calc-value" style="min-width:36px">3.0</span></div>
+      <div class="info-field"><label>Duration</label><input type="number" id="gastric-duration" style="width:52px"><span class="unit">min</span></div>
+      <div class="info-field"><label>Temp.</label><input type="number" id="gastric-temp" style="width:50px"><span class="unit">°C</span></div>
+      <div class="info-field"><label>Final [Ca²⁺]</label><input type="number" id="gastric-ca-target" step="0.001" min="0" oninput="recalcAll()" style="width:62px"><span class="unit">mM</span></div>
+    </div>
+    <div class="warnings-area" id="gastric-warnings"></div>
+  </div>
+
+  <!-- Right: Enzyme Preparation -->
+  <div class="panel">
+    <span class="panel-title">Enzyme Preparation</span>
+    <div class="enzyme-list">
+
+      <!-- Gastric Mastermix card -->
+      <div class="enzyme-card mm-card gastric-mastermix-row" style="display:none" id="gastric-mm-card">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Gastric Mastermix</span>
+          <span class="enzyme-badge mm">Stock ×<span class="n1-span gastric-n1">4</span> samples</span>
+        </div>
+        <div class="enzyme-body">
+          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:7px">Prepare mastermix; add to oral chyme individually after pH adjustment.</p>
+          <table class="mm-table">
+            <tr><td>SGF</td><td class="mm-unit">mL</td><td><span id="gastric-mm-sgf-stk">—</span></td></tr>
+            <tr id="gastric-mm-rge-row"><td>RGE solution</td><td class="mm-unit">mL</td><td><span id="gastric-mm-rge-stk">—</span></td></tr>
+            <tr id="gastric-mm-pepsin-row" style="display:none"><td>Pepsin solution</td><td class="mm-unit">mL</td><td><span id="gastric-mm-pepsin-stk">—</span></td></tr>
+            <tr id="gastric-mm-extralipase-row" style="display:none"><td>Extra lipase solution</td><td class="mm-unit">mL</td><td><span id="gastric-mm-extralipase-stk">—</span></td></tr>
+            <tr><td>0.3 M CaCl₂</td><td class="mm-unit">µL</td><td><span id="gastric-mm-cacl2-stk">—</span></td></tr>
+            <tr><td>Acid/base (pH 3.0)</td><td class="mm-unit">mL</td><td><span id="gastric-mm-acid-stk">—</span></td></tr>
+            <tr><td>Water (mQ)</td><td class="mm-unit">mL</td><td><span id="gastric-mm-water-stk">—</span></td></tr>
+            <tr style="font-weight:600"><td>Total mastermix</td><td class="mm-unit">mL</td><td><span id="gastric-mm-total-stk">—</span></td></tr>
+          </table>
+          <p style="font-size:10px;color:var(--text-muted);margin-top:6px">Aliquot <span id="gastric-mm-aliquot">—</span> mL per sample.</p>
+        </div>
+      </div>
+
+      <!-- RGE card -->
+      <div class="enzyme-card" id="gastric-rge-card">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Rabbit Gastric Extract (RGE)</span>
+          <span class="enzyme-badge" id="gastric-rge-badge">Lipase: 60 U/mL</span>
+        </div>
+        <div class="enzyme-body">
+          <!-- RGE-only toggle -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+            <span style="font-size:11px;color:var(--text-secondary)">RGE lipase sufficient?</span>
+            <div class="toggle-group" id="gastric-rge-sufficient-toggle">
+              <button class="toggle-btn active" onclick="setRgeSufficient(true,this)">RGE only</button>
+              <button class="toggle-btn" onclick="setRgeSufficient(false,this)">+ Extra lipase</button>
+            </div>
+          </div>
+          <div class="enzyme-grid">
+            <div class="enzyme-field"><label>Product</label><input type="text" id="gastric-rge-product" class="text-input" placeholder="e.g. Lipolytech"></div>
+            <div class="enzyme-field"><label>Lot No.</label><input type="text" id="gastric-rge-lot" class="text-input" placeholder="Lot #"></div>
+            <div class="enzyme-field"><label>Lipase target (U/mL)</label><input type="number" id="gastric-rge-lipase-target" value="60" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Measured lipase (U/mg)</label><input type="number" id="gastric-rge-lipase-activity" placeholder="e.g. 30" step="0.1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Pepsin target (U/mL)</label><input type="number" id="gastric-rge-pepsin-target" value="2000" step="10" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Measured pepsin (U/mg)</label><input type="number" id="gastric-rge-pepsin-activity" placeholder="e.g. 3800" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-rge-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+          </div>
+          <div class="enzyme-calc-row">
+            <div><div class="ecalc-label">Min. weight (lipase) — per sample</div><span class="calc-value" id="gastric-rge-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Min. weight — stock ×<span class="n1-span gastric-n1">4</span></div><span class="calc-value" id="gastric-rge-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — per sample</div><input type="number" id="gastric-rge-eff" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="gastric-rge-eff-stk" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Dissolve in SGF — per sample</div><span class="calc-value" id="gastric-rge-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit" id="gastric-rge-diss-unit">mL</div></div>
+            <div><div class="ecalc-label">Dissolve in SGF — stock</div><span class="calc-value" id="gastric-rge-diss-stk" style="width:100%;display:block">—</span><div class="ecalc-unit" id="gastric-rge-diss-stk-unit">mL</div></div>
+          </div>
+          <div class="warnings-area" id="gastric-rge-warnings"></div>
+        </div>
+      </div>
+
+      <!-- Extra Lipase card (shown when RGE insufficient) -->
+      <div class="enzyme-card" id="gastric-extralipase-card" style="display:none">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Supplementary Gastric Lipase</span>
+          <span class="enzyme-badge" id="gastric-extralipase-badge">Complement to RGE</span>
+        </div>
+        <div class="enzyme-body">
+          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Used to reach the target lipase activity when RGE alone is insufficient. The extra lipase solution is added directly to the gastric phase.</p>
+          <div class="enzyme-grid">
+            <div class="enzyme-field"><label>Product</label><input type="text" id="gastric-extralipase-product" class="text-input" placeholder="e.g. Sigma L3126"></div>
+            <div class="enzyme-field"><label>Lot No.</label><input type="text" id="gastric-extralipase-lot" class="text-input" placeholder="Lot #"></div>
+            <div class="enzyme-field"><label>Target in chyme (U/mL)</label><input type="number" id="gastric-extralipase-target" value="60" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Measured activity (U/mg)</label><input type="number" id="gastric-extralipase-activity" placeholder="e.g. 5000" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-extralipase-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+          </div>
+          <div class="enzyme-calc-row">
+            <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="gastric-extralipase-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="gastric-extralipase-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — per sample</div><input type="number" id="gastric-extralipase-eff" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="gastric-extralipase-eff-stk" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Dissolve in SGF — per sample</div><span class="calc-value" id="gastric-extralipase-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+            <div><div class="ecalc-label">Dissolve in SGF — stock</div><span class="calc-value" id="gastric-extralipase-diss-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+          </div>
+          <div class="warnings-area" id="gastric-extralipase-warnings"></div>
+        </div>
+      </div>
+
+      <!-- Pepsin card -->
+      <div class="enzyme-card" id="gastric-pepsin-card" style="display:none">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Pepsin</span>
+          <span class="enzyme-badge">Target: 2000 U/mL</span>
+        </div>
+        <div class="enzyme-body">
+          <div class="enzyme-grid">
+            <div class="enzyme-field"><label>Product</label><input type="text" id="gastric-pepsin-product" class="text-input" placeholder="e.g. Sigma P7012"></div>
+            <div class="enzyme-field"><label>Lot No.</label><input type="text" id="gastric-pepsin-lot" class="text-input" placeholder="Lot #"></div>
+            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="gastric-pepsin-target" value="2000" step="10" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="gastric-pepsin-activity" placeholder="e.g. 3800" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-pepsin-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+          </div>
+          <div class="enzyme-calc-row">
+            <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="gastric-pepsin-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="gastric-pepsin-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — per sample</div><input type="number" id="gastric-pepsin-eff" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="gastric-pepsin-eff-stk" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Dissolve in SGF — per sample</div><span class="calc-value" id="gastric-pepsin-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit" id="gastric-pepsin-diss-unit">mL</div></div>
+            <div><div class="ecalc-label">Dissolve in SGF — stock</div><span class="calc-value" id="gastric-pepsin-diss-stk" style="width:100%;display:block">—</span><div class="ecalc-unit" id="gastric-pepsin-diss-stk-unit">mL</div></div>
+          </div>
+          <div class="warnings-area" id="gastric-pepsin-warnings"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /phase-1 -->
+
+
+<!-- ══════════════════════════════════════════
+     PHASE 2 — INTESTINAL
+══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-2">
+
+  <!-- Left: Composition -->
+  <div class="panel">
+    <div class="section-header">
+      <span class="panel-title">Phase Composition</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div class="toggle-group" id="int-mode-toggle">
+          <button class="toggle-btn active" onclick="setMode('int','individual',this)">Individual</button>
+          <button class="toggle-btn" onclick="setMode('int','mastermix',this)">Mastermix</button>
+        </div>
+        <div class="toggle-group" id="int-enzyme-toggle">
+          <button class="toggle-btn active" onclick="setIntEnzyme('pancreatin',this)">Pancreatin</button>
+          <button class="toggle-btn" onclick="setIntEnzyme('individual',this)">Individual</button>
+        </div>
+      </div>
+    </div>
+
+    <table class="comp-table">
+      <thead><tr>
+        <th>Component</th>
+        <th class="r">Per sample</th>
+        <th>Unit</th>
+        <th class="r">Stock ×<span class="n1-span int-n1">4</span></th>
+        <th>Unit</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="comp-label">Gastric chyme</span></td>
+          <td class="r"><span class="calc-value" id="int-gastric-in">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-gastric-in-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <!-- Individual rows -->
+        <tr class="int-individual-row">
+          <td><span class="comp-label">SIF (1.25×)</span></td>
+          <td class="r"><span class="calc-value" id="int-sif-val">—</span></td>
+          <td><span class="comp-unit" id="int-sif-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-sif-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row" id="int-pancreatin-row">
+          <td><span class="comp-label">Pancreatin solution</span></td>
+          <td class="r"><span class="calc-value" id="int-pancreatin-vol-val">—</span></td>
+          <td><span class="comp-unit" id="int-pancreatin-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-pancreatin-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row" id="int-trypsin-row" style="display:none">
+          <td><span class="comp-label">Trypsin solution</span></td>
+          <td class="r"><span class="calc-value" id="int-trypsin-vol-val">—</span></td>
+          <td><span class="comp-unit" id="int-trypsin-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-trypsin-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row" id="int-chymo-row" style="display:none">
+          <td><span class="comp-label">Chymotrypsin solution</span></td>
+          <td class="r"><span class="calc-value" id="int-chymo-vol-val">—</span></td>
+          <td><span class="comp-unit" id="int-chymo-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-chymo-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row" id="int-lipase-row" style="display:none">
+          <td><span class="comp-label">Pancreatic lipase solution</span></td>
+          <td class="r"><span class="calc-value" id="int-lipase-vol-val">—</span></td>
+          <td><span class="comp-unit" id="int-lipase-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-lipase-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row" id="int-colipase-row" style="display:none">
+          <td><span class="comp-label">Colipase solution</span></td>
+          <td class="r"><span class="calc-value" id="int-colipase-vol-val">—</span></td>
+          <td><span class="comp-unit" id="int-colipase-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-colipase-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row" id="int-intamylase-row" style="display:none">
+          <td><span class="comp-label">Intestinal amylase solution</span></td>
+          <td class="r"><span class="calc-value" id="int-intamylase-vol-val">—</span></td>
+          <td><span class="comp-unit" id="int-intamylase-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-intamylase-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row">
+          <td><span class="comp-label">Bile solution</span></td>
+          <td class="r"><span class="calc-value" id="int-bile-vol-val">—</span></td>
+          <td><span class="comp-unit" id="int-bile-vol-unit-sample">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-bile-vol-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row">
+          <td><span class="comp-label">0.3 M CaCl₂</span></td>
+          <td class="r"><span class="calc-value" id="int-cacl2">—</span></td>
+          <td><span class="comp-unit" id="cacl2-vol-unit-sample">µL</span></td>
+          <td class="r"><span class="calc-value" id="int-cacl2-stk">—</span></td>
+          <td><span class="comp-unit">µL</span></td>
+        </tr>
+        <tr class="int-individual-row">
+          <td><span class="comp-label">Acid/base → pH 7.0</span></td>
+          <td class="r"><input type="number" id="int-base" min="0" step="0.01" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-base-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="int-individual-row">
+          <td><span class="comp-label">Water (mQ)</span></td>
+          <td class="r"><span class="calc-value" id="int-water">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-water-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <!-- Mastermix row -->
+        <tr class="int-mastermix-row mm-row" style="display:none">
+          <td><span class="comp-label" style="color:var(--mastermix);font-weight:500">Intestinal mastermix</span></td>
+          <td class="r"><span class="calc-value mm" id="int-mm-per-sample">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value mm" id="int-mm-stock">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="total-row">
+          <td><span class="comp-label">Total digest</span></td>
+          <td class="r"><span class="calc-value" id="int-total-val">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-total-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="sampling-row">
+          <td><span class="comp-label">Sampling (if any)</span></td>
+          <td class="r"><input type="number" id="int-sampling" min="0" step="0.1" oninput="recalcAll()" style="width:70px"></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-sampling-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+        <tr class="total-row">
+          <td><span class="comp-label">Final volume →</span></td>
+          <td class="r"><span class="calc-value" id="int-final">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+          <td class="r"><span class="calc-value" id="int-final-stk">—</span></td>
+          <td><span class="comp-unit">mL</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-row">
+      <div class="info-field"><label>pH</label><span class="calc-value" style="min-width:36px">7.0</span></div>
+      <div class="info-field"><label>Duration</label><input type="number" id="int-duration" style="width:52px"><span class="unit">min</span></div>
+      <div class="info-field"><label>Temp.</label><input type="number" id="int-temp" style="width:50px"><span class="unit">°C</span></div>
+      <div class="info-field"><label>Final [Ca²⁺]</label><input type="number" id="int-ca-target" step="0.01" min="0" oninput="recalcAll()" style="width:60px"><span class="unit">mM</span></div>
+    </div>
+    <div class="warnings-area" id="int-warnings"></div>
+  </div>
+
+  <!-- Right: Enzyme & Bile Preparation -->
+  <div class="panel">
+    <span class="panel-title">Enzyme &amp; Bile Preparation</span>
+    <div class="enzyme-list">
+
+      <!-- Intestinal Mastermix card -->
+      <div class="enzyme-card mm-card int-mastermix-row" style="display:none" id="int-mm-card">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Intestinal Mastermix</span>
+          <span class="enzyme-badge mm">Stock ×<span class="n1-span int-n1">4</span> samples</span>
+        </div>
+        <div class="enzyme-body">
+          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:7px">Prepare mastermix; add to gastric chyme after pH adjustment to 7.0.</p>
+          <table class="mm-table">
+            <tr><td>SIF</td><td class="mm-unit">mL</td><td><span id="int-mm-sif-stk">—</span></td></tr>
+            <tr id="int-mm-pancreatin-row"><td>Pancreatin solution</td><td class="mm-unit">mL</td><td><span id="int-mm-pancreatin-stk">—</span></td></tr>
+            <tr id="int-mm-indiv-row" style="display:none"><td>Enzyme solutions (total)</td><td class="mm-unit">mL</td><td><span id="int-mm-indiv-stk">—</span></td></tr>
+            <tr><td>Bile solution</td><td class="mm-unit">mL</td><td><span id="int-mm-bile-stk">—</span></td></tr>
+            <tr><td>0.3 M CaCl₂</td><td class="mm-unit">µL</td><td><span id="int-mm-cacl2-stk">—</span></td></tr>
+            <tr><td>Acid/base (pH 7.0)</td><td class="mm-unit">mL</td><td><span id="int-mm-base-stk">—</span></td></tr>
+            <tr><td>Water (mQ)</td><td class="mm-unit">mL</td><td><span id="int-mm-water-stk">—</span></td></tr>
+            <tr style="font-weight:600"><td>Total mastermix</td><td class="mm-unit">mL</td><td><span id="int-mm-total-stk">—</span></td></tr>
+          </table>
+          <p style="font-size:10px;color:var(--text-muted);margin-top:6px">Aliquot <span id="int-mm-aliquot">—</span> mL per sample.</p>
+        </div>
+      </div>
+
+      <!-- Pancreatin card -->
+      <div class="enzyme-card" id="int-pancreatin-card">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Pancreatin</span>
+          <span class="enzyme-badge">Per label specification</span>
+        </div>
+        <div class="enzyme-body">
+          <div class="enzyme-grid">
+            <div class="enzyme-field"><label>Product</label><input type="text" id="int-pancreatin-product" class="text-input" placeholder="e.g. Sigma P1750"></div>
+            <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-pancreatin-lot" class="text-input" placeholder="Lot #"></div>
+            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-pancreatin-target" value="100" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-pancreatin-activity" placeholder="e.g. 800" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="int-pancreatin-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+          </div>
+          <div class="enzyme-calc-row">
+            <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-pancreatin-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="int-pancreatin-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — per sample</div><input type="number" id="int-pancreatin-eff" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="int-pancreatin-eff-stk" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Dissolve in SIF — per sample</div><span class="calc-value" id="int-pancreatin-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit" id="int-pancreatin-diss-unit">mL</div></div>
+            <div><div class="ecalc-label">Dissolve in SIF — stock</div><span class="calc-value" id="int-pancreatin-diss-stk" style="width:100%;display:block">—</span><div class="ecalc-unit" id="int-pancreatin-diss-stk-unit">mL</div></div>
+          </div>
+          <div class="warnings-area" id="int-pancreatin-warnings"></div>
+        </div>
+      </div>
+
+      <!-- Individual enzyme block (hidden by default) -->
+      <div id="int-individual-block" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:8px">
+
+          <!-- Trypsin -->
+          <div class="enzyme-card" id="int-trypsin-card">
+            <div class="enzyme-header"><span class="enzyme-name">Trypsin</span><span class="enzyme-badge">100 U/mL</span></div>
+            <div class="enzyme-body">
+              <div class="enzyme-grid">
+                <div class="enzyme-field"><label>Product</label><input type="text" id="int-trypsin-product" class="text-input" placeholder="e.g. T4799"></div>
+                <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-trypsin-lot" class="text-input" placeholder="Lot #"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-trypsin-target" value="100" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-trypsin-activity" placeholder="e.g. 10000" min="0" oninput="recalcAll()"></div>
+              </div>
+              <div class="enzyme-calc-row">
+                <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-trypsin-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="int-trypsin-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed</div><input type="number" id="int-trypsin-eff" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="int-trypsin-eff-stk" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Dissolve in SIF</div><span class="calc-value" id="int-trypsin-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+              </div>
+              <div class="warnings-area" id="int-trypsin-warnings"></div>
+            </div>
+          </div>
+
+          <!-- Chymotrypsin -->
+          <div class="enzyme-card" id="int-chymo-card">
+            <div class="enzyme-header"><span class="enzyme-name">Chymotrypsin</span><span class="enzyme-badge">25 U/mL</span></div>
+            <div class="enzyme-body">
+              <div class="enzyme-grid">
+                <div class="enzyme-field"><label>Product</label><input type="text" id="int-chymo-product" class="text-input" placeholder="e.g. C4129"></div>
+                <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-chymo-lot" class="text-input" placeholder="Lot #"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-chymo-target" value="25" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-chymo-activity" placeholder="e.g. 40" min="0" oninput="recalcAll()"></div>
+              </div>
+              <div class="enzyme-calc-row">
+                <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-chymo-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="int-chymo-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed</div><input type="number" id="int-chymo-eff" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="int-chymo-eff-stk" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Dissolve in SIF</div><span class="calc-value" id="int-chymo-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+              </div>
+              <div class="warnings-area" id="int-chymo-warnings"></div>
+            </div>
+          </div>
+
+          <!-- Pancreatic Lipase -->
+          <div class="enzyme-card" id="int-lipase-card">
+            <div class="enzyme-header"><span class="enzyme-name">Pancreatic Lipase</span><span class="enzyme-badge">2000 U/mL</span></div>
+            <div class="enzyme-body">
+              <div class="enzyme-grid">
+                <div class="enzyme-field"><label>Product</label><input type="text" id="int-lipase-product" class="text-input" placeholder="e.g. L3126"></div>
+                <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-lipase-lot" class="text-input" placeholder="Lot #"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-lipase-target" value="2000" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-lipase-activity" placeholder="e.g. 5000" min="0" oninput="recalcAll()"></div>
+              </div>
+              <div class="enzyme-calc-row">
+                <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-lipase-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="int-lipase-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed</div><input type="number" id="int-lipase-eff" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="int-lipase-eff-stk" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Dissolve in SIF</div><span class="calc-value" id="int-lipase-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+              </div>
+              <div class="warnings-area" id="int-lipase-warnings"></div>
+            </div>
+          </div>
+
+          <!-- Colipase -->
+          <div class="enzyme-card" id="int-colipase-card">
+            <div class="enzyme-header"><span class="enzyme-name">Colipase</span><span class="enzyme-badge">Ratio: 2× lipase</span></div>
+            <div class="enzyme-body">
+              <div class="enzyme-grid">
+                <div class="enzyme-field"><label>Product</label><input type="text" id="int-colipase-product" class="text-input" placeholder="e.g. C3028"></div>
+                <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-colipase-lot" class="text-input" placeholder="Lot #"></div>
+                <div class="enzyme-field"><label>Target (U/mg)</label><input type="number" id="int-colipase-target" value="4000" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-colipase-activity" placeholder="e.g. 6000" min="0" oninput="recalcAll()"></div>
+              </div>
+              <div class="enzyme-calc-row">
+                <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-colipase-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="int-colipase-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed</div><input type="number" id="int-colipase-eff" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="int-colipase-eff-stk" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Dissolve in SIF</div><span class="calc-value" id="int-colipase-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Intestinal α-Amylase -->
+          <div class="enzyme-card" id="int-intamylase-card">
+            <div class="enzyme-header"><span class="enzyme-name">Intestinal α-Amylase</span><span class="enzyme-badge">200 U/mL</span></div>
+            <div class="enzyme-body">
+              <div class="enzyme-grid">
+                <div class="enzyme-field"><label>Product</label><input type="text" id="int-intamylase-product" class="text-input" placeholder="Product name"></div>
+                <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-intamylase-lot" class="text-input" placeholder="Lot #"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-intamylase-target" value="200" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-intamylase-activity" placeholder="e.g. 1500" min="0" oninput="recalcAll()"></div>
+              </div>
+              <div class="enzyme-calc-row">
+                <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-intamylase-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="int-intamylase-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed</div><input type="number" id="int-intamylase-eff" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="int-intamylase-eff-stk" placeholder="mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+                <div><div class="ecalc-label">Dissolve in SIF</div><span class="calc-value" id="int-intamylase-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mL</div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /int-individual-block -->
+
+      <!-- Bile card (always shown) -->
+      <div class="enzyme-card" id="int-bile-card">
+        <div class="enzyme-header">
+          <span class="enzyme-name">Bile Salts</span>
+          <span class="enzyme-badge" id="int-bile-badge">Target: 10 mM</span>
+        </div>
+        <div class="enzyme-body">
+          <div class="enzyme-grid">
+            <div class="enzyme-field"><label>Product</label><input type="text" id="int-bile-product" class="text-input" placeholder="e.g. Sigma B8756"></div>
+            <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-bile-lot" class="text-input" placeholder="Lot #"></div>
+            <div class="enzyme-field"><label>Target (mM)</label><input type="number" id="int-bile-conc-target" value="10" step="0.5" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Measured (mmol/g)</label><input type="number" id="int-bile-measured" placeholder="e.g. 1.5" step="0.01" min="0" oninput="recalcAll()"></div>
+          </div>
+          <div class="enzyme-calc-row">
+            <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-bile-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Min. weight — stock</div><span class="calc-value" id="int-bile-minwt-stk" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — per sample</div><input type="number" id="int-bile-eff" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Effective weighed — stock</div><input type="number" id="int-bile-eff-stk" placeholder="actual mg" oninput="recalcAll()" style="width:100%"><div class="ecalc-unit">mg</div></div>
+            <div><div class="ecalc-label">Dissolve in SIF — per sample</div><span class="calc-value" id="int-bile-diss-s" style="width:100%;display:block">—</span><div class="ecalc-unit" id="int-bile-diss-unit">mL</div></div>
+            <div><div class="ecalc-label">Dissolve in SIF — stock</div><span class="calc-value" id="int-bile-diss-stk" style="width:100%;display:block">—</span><div class="ecalc-unit" id="int-bile-diss-stk-unit">mL</div></div>
+          </div>
+          <div class="warnings-area" id="int-bile-warnings"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /phase-2 -->
+
+</div><!-- /content -->
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<div class="footer">
+  <div class="footer-nav">
+    <button class="btn btn-ghost" id="btn-prev" disabled>← Previous</button>
+    <button class="btn btn-primary" id="btn-next">Next: Gastric →</button>
+  </div>
+  <div class="footer-meta">
+    <span><span class="status-dot"></span>Auto-saved</span>
+    <span id="footer-info">—</span>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+    <!-- External dependencies -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Module initialization (requires HTTP server — will not work with file:// protocol) -->
+    <script type="module">
+        import { init } from './js/ui.js';
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+    <script nomodule>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.content').innerHTML =
+                '<div style="padding:40px;text-align:center;color:var(--error)">' +
+                '<h2>HTTP Server Required</h2>' +
+                '<p>ES modules cannot load via <code>file://</code> protocol.</p>' +
+                '<p>Run <code>python3 -m http.server 8000</code> in this directory, then open <code>http://localhost:8000</code></p>' +
+                '</div>';
+        });
+    </script>
+</body>
+</html>

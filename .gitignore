@@ -1,0 +1,17 @@
+# Claude workspace folder
+.claude/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Node modules (if applicable)
+node_modules/
+
+# Editor settings
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local

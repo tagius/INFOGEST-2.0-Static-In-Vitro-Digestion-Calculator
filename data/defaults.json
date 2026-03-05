@@ -1,0 +1,132 @@
+{
+  "header": {
+    "nSamples": 3,
+    "operator": "",
+    "algaeFood": 0.125,
+    "algaeVolume": 0.5,
+    "algaeDryMassMg": 125
+  },
+  "oral": {
+    "food": 5,
+    "sampling": 0,
+    "duration": 2,
+    "temp": 37,
+    "caTarget": 0.75,
+    "amylase": {
+      "product": "Sigma Amylase A1031",
+      "lot": "408939",
+      "activity": 1000,
+      "purity": 100,
+      "target": 75,
+      "effective": 0,
+      "effectiveStk": 10,
+      "additionMode": "solution"
+    }
+  },
+  "gastric": {
+    "sampling": 0,
+    "duration": 120,
+    "temp": 37,
+    "acid": 0,
+    "caTarget": 0.075,
+    "rge": {
+      "product": "Lipolytech RGE15-1G",
+      "lot": "Lot #4601",
+      "lipaseActivity": 17,
+      "pepsinActivity": 850,
+      "purity": 100,
+      "lipaseTarget": 60,
+      "pepsinTarget": 2000,
+      "effective": 0,
+      "effectiveStk": 60
+    },
+    "pepsin": {
+      "product": "Sigma Pepsin P7012",
+      "lot": "",
+      "activity": 2500,
+      "purity": 100,
+      "target": 2000,
+      "effective": 0,
+      "effectiveStk": 160
+    },
+    "extraLipase": {
+      "product": "Sigma Lipase L3126",
+      "lot": "418303",
+      "activity": 125,
+      "purity": 100,
+      "target": 60,
+      "effective": 0,
+      "effectiveStk": 60
+    }
+  },
+  "intestinal": {
+    "sampling": 0,
+    "duration": 120,
+    "temp": 37,
+    "base": 0,
+    "caTarget": 0.3,
+    "pancreatin": {
+      "product": "Sigma Pancreatin P7545",
+      "lot": "",
+      "activity": 8.462,
+      "purity": 100,
+      "target": 100,
+      "effective": 50,
+      "effectiveStk": 500
+    },
+    "bile": {
+      "product": "Sigma Bile B8631",
+      "lot": "",
+      "measured": 3.98,
+      "purity": 100,
+      "target": 10,
+      "effective": 10,
+      "effectiveStk": 100
+    },
+    "trypsin": {
+      "product": "Sigma Trypsin T0303",
+      "lot": "",
+      "activity": 200,
+      "purity": 100,
+      "target": 100,
+      "effective": 20,
+      "effectiveStk": 200
+    },
+    "chymotrypsin": {
+      "product": "Sigma Chymotrypsin C4129",
+      "lot": "",
+      "activity": 50,
+      "purity": 100,
+      "target": 25,
+      "effective": 0,
+      "effectiveStk": 25
+    },
+    "lipase": {
+      "product": "Sigma Lipase L3126",
+      "lot": "",
+      "activity": 1000,
+      "purity": 100,
+      "target": 2000,
+      "effective": 0,
+      "effectiveStk": 2000
+    },
+    "colipase": {
+      "product": "Sigma Colipase C3028",
+      "lot": "",
+      "activity": 6000,
+      "purity": 100,
+      "target": 0,
+      "effective": 0,
+      "effectiveStk": 0
+    },
+    "amylase": {
+      "product": "Sigma Amylase A3176",
+      "lot": "",
+      "activity": 100,
+      "purity": 100,
+      "target": 200,
+      "effective": 0,
+      "effectiveStk": 200
+    }
+  }
+}
