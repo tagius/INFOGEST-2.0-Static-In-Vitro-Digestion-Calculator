@@ -212,14 +212,8 @@ html, body {
   .hdiv:first-of-type { display: none; } /* Hide divider after subtitle */
 }
 
-/* 2. Hide Operator/Date fields and move to dropdown at < 1199px */
+/* 2. Show compact menu toggle at all breakpoints < 1199px */
 @media (max-width: 1199px) {
-  .header-operator,
-  .header-date,
-  .header-operator-divider,
-  .header-date-divider {
-    display: none;
-  }
   .header-menu-toggle {
     display: flex;
   }
@@ -234,7 +228,17 @@ html, body {
   }
 }
 
-/* 4. Hide Export .xlsx button and move to dropdown at < 900px */
+/* 4. Hide Operator/Date fields and move to dropdown at < 900px */
+@media (max-width: 900px) {
+  .header-operator,
+  .header-date,
+  .header-operator-divider,
+  .header-date-divider {
+    display: none;
+  }
+}
+
+/* 5. Hide Export .xlsx button and move to dropdown at < 900px */
 @media (max-width: 900px) {
   #btn-export {
     display: none;
