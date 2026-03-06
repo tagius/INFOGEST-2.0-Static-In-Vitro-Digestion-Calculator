@@ -866,11 +866,11 @@ export function generateEnzymeWarnings(name, effective, minWt, dissolve, dissolu
   const warnings = [];
 
   if (effective === null || effective == 0) {
-      warnings.push({
-        type: 'warning',
-        message: `Weighed ${name} mass is zero or not entered. Enter effective mass to dilution volume.`
-      });
-    }
+    warnings.push({
+      type: 'warning',
+      message: `Weighed ${name} mass is zero or not entered. Enter effective mass to dilution volume.`
+    });
+  }
   if (effective > 0 && minWt !== null && effective < minWt) {
     warnings.push({
       type: 'error',
