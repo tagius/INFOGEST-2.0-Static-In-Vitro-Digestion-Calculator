@@ -431,6 +431,8 @@ function calcOral() {
   const phaseWarnings = generateOralWarnings(result);
   renderWarnings('oral-warnings', phaseWarnings);
 
+  const isPowderMode = amylaseSource === 'powder';
+
   const enzymeWarnings = generateAmylaseWarnings(
     result,
     fv('oral-amylase-activity'),
@@ -439,8 +441,13 @@ function calcOral() {
     result.amylaseMinWt,
     result.amylaseDissolve,
     'per sample',
-    { amylaseDisabled: result.amylaseDisabled, showPurityInfo: true }
-);
+    {
+      amylaseDisabled: result.amylaseDisabled,
+      isPowderMode,
+      showPurityInfo: true
+    }
+  );
+
   // Stock warnings
   if (N1 > 2 && !result.amylaseDisabled) {
     const stkWarnings = generateAmylaseWarnings(
@@ -451,7 +458,10 @@ function calcOral() {
       result.amylaseMinWt_stk,
       result.amylaseDissolve_stk,
       'stock',
-      { showPurityInfo: false }
+      {
+        isPowderMode,
+        showPurityInfo: false
+      }
     );
     enzymeWarnings.push(...stkWarnings);
   }

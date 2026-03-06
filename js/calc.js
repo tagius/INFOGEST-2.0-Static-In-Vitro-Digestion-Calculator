@@ -788,7 +788,8 @@ export function generateAmylaseWarnings(
   options = {}
 ) {
   const warnings = [];
-  const { amylaseDisabled = false, showPurityInfo = true } = options;
+  const { amylaseDisabled = false, isPowderMode = true, showPurityInfo = true } = options;
+  
 
   if (amylaseDisabled) {
     warnings.push({
@@ -797,6 +798,9 @@ export function generateAmylaseWarnings(
     });
     return warnings;
   }
+  
+  // No powder-related warnings in solution mode
+  if (!isPowderMode) return warnings;
 
   if (!activity || activity <= 0) {
     warnings.push({
