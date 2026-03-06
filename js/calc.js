@@ -868,7 +868,7 @@ export function generateEnzymeWarnings(name, effective, minWt, dissolve, dissolu
   if (effective === null || effective == 0) {
       warnings.push({
         type: 'warning',
-        message: `Weighed amylase mass (${label}) is zero or not entered. Enter effective mass to dilution volume.`
+        message: `Weighed ${name} mass is zero or not entered. Enter effective mass to dilution volume.`
       });
     }
   if (effective > 0 && minWt !== null && effective < minWt) {
