@@ -780,6 +780,7 @@ export function generateOralWarnings(result) {
 export function generateAmylaseWarnings(
   result,
   activity,
+  purity,
   effective,
   minWt,
   dissolve,
@@ -787,7 +788,7 @@ export function generateAmylaseWarnings(
   options = {}
 ) {
   const warnings = [];
-  const { amylaseDisabled = false } = options;
+  const { amylaseDisabled = false, showPurityInfo = true } = options;
 
   if (amylaseDisabled) {
     warnings.push({
@@ -803,6 +804,18 @@ export function generateAmylaseWarnings(
       message: `Enter measured salivary amylase activity (U/mg) to calculate minimum weight.`
     });
   } else {
+    if (showPurityInfo && purity > 0) {
+      warnings.push({
+        type: 'info',
+        message: `Current purity: ${fmt(purity, 2)}%. Verify supplier COA and ensure purity.`
+      });
+    }
+    if (effective === null || effective == 0) {
+      warnings.push({
+        type: 'warning',
+        message: `Cannot calculate minimum amylase weight without valid activity and purity.`
+      });
+    }
     if (effective > 0 && minWt !== null && effective < minWt) {
       warnings.push({
         type: 'error',
@@ -815,7 +828,7 @@ export function generateAmylaseWarnings(
         message: `Dissolution of amylase (${label}) may be critical — try using more active enzyme.`
       });
     }
-  }
+  } 
 
   return warnings;
 }

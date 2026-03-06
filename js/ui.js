@@ -434,21 +434,24 @@ function calcOral() {
   const enzymeWarnings = generateAmylaseWarnings(
     result,
     fv('oral-amylase-activity'),
+    fv('oral-amylase-purity'),
     fv('oral-amylase-eff'),
     result.amylaseMinWt,
     result.amylaseDissolve,
     'per sample',
-    { amylaseDisabled: result.amylaseDisabled }
-  );
+    { amylaseDisabled: result.amylaseDisabled, showPurityInfo: true }
+);
   // Stock warnings
   if (N1 > 2 && !result.amylaseDisabled) {
     const stkWarnings = generateAmylaseWarnings(
       result,
       fv('oral-amylase-activity'),
+      fv('oral-amylase-purity'),
       fv('oral-amylase-eff-stk'),
       result.amylaseMinWt_stk,
       result.amylaseDissolve_stk,
-      'stock'
+      'stock',
+      { showPurityInfo: false }
     );
     enzymeWarnings.push(...stkWarnings);
   }
