@@ -817,7 +817,7 @@ export function generateAmylaseWarnings(
     if (effective === null || effective == 0) {
       warnings.push({
         type: 'warning',
-        message: `Cannot calculate minimum amylase weight without valid activity and purity.`
+        message: `Weighed amylase mass (${label}) is zero or not entered. Enter effective mass to dilution volume.`
       });
     }
     if (effective > 0 && minWt !== null && effective < minWt) {
@@ -865,6 +865,12 @@ export function generateGastricWarnings(result) {
 export function generateEnzymeWarnings(name, effective, minWt, dissolve, dissolutionLimit = 250) {
   const warnings = [];
 
+  if (effective === null || effective == 0) {
+      warnings.push({
+        type: 'warning',
+        message: `Weighed amylase mass (${label}) is zero or not entered. Enter effective mass to dilution volume.`
+      });
+    }
   if (effective > 0 && minWt !== null && effective < minWt) {
     warnings.push({
       type: 'error',
