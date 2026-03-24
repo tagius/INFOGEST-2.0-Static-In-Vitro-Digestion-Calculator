@@ -32,6 +32,7 @@ let amylaseSource = 'powder';    // 'powder' | 'solution'
 let salivaryCarrier = 'solution'; // 'solution' | 'water' (algae-only)
 let finishedClicked = false;     // flag to track if "Finish & Export" has been clicked, to prevent multiple exports
 let defaultsData = null;         // stores loaded defaults from JSON
+let bugReportURL = 'https://sfp-apnh.notion.site/32dfe013d6a1801f83e7e5a705bcb3c9';
 
 const phaseNames = ['Oral', 'Gastric', 'Intestinal'];
 
@@ -1249,6 +1250,8 @@ export async function init() {
   document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
   document.getElementById('btn-prev')?.addEventListener('click', () => { if (currentPhase > 0) goToPhase(currentPhase - 1); });
   document.getElementById('btn-next')?.addEventListener('click', () => { if (currentPhase < 2) goToPhase(currentPhase + 1); });
+  document.getElementById('btn-bug')?.addEventListener('click', () => {
+    const popup = window.open(bugReportURL, '_blank', 'noopener,noreferrer'); });
 
   // Stepper tabs
   [0, 1, 2].forEach(i => {
