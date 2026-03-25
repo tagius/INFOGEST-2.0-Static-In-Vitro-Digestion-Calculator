@@ -1,5 +1,6 @@
 # Claude workspace folder
 .claude/
+CLAUDE.md
 
 # System files
 .DS_Store
