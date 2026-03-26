@@ -256,9 +256,9 @@
           <div class="enzyme-grid">
             <div class="enzyme-field"><label>Product</label><input type="text" id="oral-amylase-product" class="text-input" placeholder="e.g. Sigma A1031"></div>
             <div class="enzyme-field"><label>Lot No.</label><input type="text" id="oral-amylase-lot" class="text-input" placeholder="Lot #"></div>
-            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="oral-amylase-target" value="75" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="oral-amylase-target" placeholder="75" step="1" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field amylase-powder-field"><label>Measured activity (U/mg)</label><input type="number" id="oral-amylase-activity" placeholder="e.g. 1500" step="1" min="0" oninput="recalcAll()"></div>
-            <div class="enzyme-field amylase-powder-field"><label>Powder purity %</label><input type="number" id="oral-amylase-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field amylase-powder-field"><label>Powder purity %</label><input type="number" id="oral-amylase-purity" placeholder="100" step="0.1" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field amylase-solution-field" style="display:none"><label>Stock conc. (U/mL)</label><input type="number" id="oral-amylase-conc" placeholder="U/mL" step="0.1" min="0" oninput="recalcAll()"></div>
           </div>
           <div class="enzyme-calc-row amylase-powder-field">
@@ -482,11 +482,11 @@
           <div class="enzyme-grid">
             <div class="enzyme-field"><label>Product</label><input type="text" id="gastric-rge-product" class="text-input" placeholder="e.g. Lipolytech"></div>
             <div class="enzyme-field"><label>Lot No.</label><input type="text" id="gastric-rge-lot" class="text-input" placeholder="Lot #"></div>
-            <div class="enzyme-field"><label>Lipase target (U/mL)</label><input type="number" id="gastric-rge-lipase-target" value="60" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Lipase target (U/mL)</label><input type="number" id="gastric-rge-lipase-target" placeholder="60" step="1" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field"><label>Measured lipase (U/mg)</label><input type="number" id="gastric-rge-lipase-activity" placeholder="e.g. 30" step="0.1" min="0" oninput="recalcAll()"></div>
-            <div class="enzyme-field"><label>Pepsin target (U/mL)</label><input type="number" id="gastric-rge-pepsin-target" value="2000" step="10" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Pepsin target (U/mL)</label><input type="number" id="gastric-rge-pepsin-target" placeholder="2000" step="10" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field"><label>Measured pepsin (U/mg)</label><input type="number" id="gastric-rge-pepsin-activity" placeholder="e.g. 3800" step="1" min="0" oninput="recalcAll()"></div>
-            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-rge-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-rge-purity" placeholder="100" step="0.1" min="0" oninput="recalcAll()"></div>
           </div>
           <div class="enzyme-calc-row">
             <div><div class="ecalc-label">Min. weight (lipase) — per sample</div><span class="calc-value" id="gastric-rge-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
@@ -511,9 +511,9 @@
           <div class="enzyme-grid">
             <div class="enzyme-field"><label>Product</label><input type="text" id="gastric-extralipase-product" class="text-input" placeholder="e.g. Sigma L3126"></div>
             <div class="enzyme-field"><label>Lot No.</label><input type="text" id="gastric-extralipase-lot" class="text-input" placeholder="Lot #"></div>
-            <div class="enzyme-field"><label>Target in chyme (U/mL)</label><input type="number" id="gastric-extralipase-target" value="60" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Target in chyme (U/mL)</label><input type="number" id="gastric-extralipase-target" placeholder="60" step="1" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field"><label>Measured activity (U/mg)</label><input type="number" id="gastric-extralipase-activity" placeholder="e.g. 5000" step="1" min="0" oninput="recalcAll()"></div>
-            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-extralipase-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-extralipase-purity" placeholder="44" step="0.1" min="0" oninput="recalcAll()"></div>
           </div>
           <div class="enzyme-calc-row">
             <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="gastric-extralipase-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
@@ -537,9 +537,9 @@
           <div class="enzyme-grid">
             <div class="enzyme-field"><label>Product</label><input type="text" id="gastric-pepsin-product" class="text-input" placeholder="e.g. Sigma P7012"></div>
             <div class="enzyme-field"><label>Lot No.</label><input type="text" id="gastric-pepsin-lot" class="text-input" placeholder="Lot #"></div>
-            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="gastric-pepsin-target" value="2000" step="10" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="gastric-pepsin-target" placeholder="2000" step="10" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="gastric-pepsin-activity" placeholder="e.g. 3800" step="1" min="0" oninput="recalcAll()"></div>
-            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-pepsin-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="gastric-pepsin-purity" placeholder="100" step="0.1" min="0" oninput="recalcAll()"></div>
           </div>
           <div class="enzyme-calc-row">
             <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="gastric-pepsin-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
@@ -779,9 +779,9 @@
           <div class="enzyme-grid">
             <div class="enzyme-field"><label>Product</label><input type="text" id="int-pancreatin-product" class="text-input" placeholder="e.g. Sigma P1750"></div>
             <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-pancreatin-lot" class="text-input" placeholder="Lot #"></div>
-            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-pancreatin-target" value="100" step="1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-pancreatin-target" placeholder="100" step="1" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-pancreatin-activity" placeholder="e.g. 800" step="1" min="0" oninput="recalcAll()"></div>
-            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="int-pancreatin-purity" value="100" step="0.1" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Powder purity %</label><input type="number" id="int-pancreatin-purity" placeholder="100" step="0.1" min="0" oninput="recalcAll()"></div>
           </div>
           <div class="enzyme-calc-row">
             <div><div class="ecalc-label">Min. weight — per sample</div><span class="calc-value" id="int-pancreatin-minwt-s" style="width:100%;display:block">—</span><div class="ecalc-unit">mg</div></div>
@@ -806,7 +806,7 @@
               <div class="enzyme-grid">
                 <div class="enzyme-field"><label>Product</label><input type="text" id="int-trypsin-product" class="text-input" placeholder="e.g. T4799"></div>
                 <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-trypsin-lot" class="text-input" placeholder="Lot #"></div>
-                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-trypsin-target" value="100" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-trypsin-target" placeholder="100" min="0" oninput="recalcAll()"></div>
                 <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-trypsin-activity" placeholder="e.g. 10000" min="0" oninput="recalcAll()"></div>
               </div>
               <div class="enzyme-calc-row">
@@ -827,7 +827,7 @@
               <div class="enzyme-grid">
                 <div class="enzyme-field"><label>Product</label><input type="text" id="int-chymo-product" class="text-input" placeholder="e.g. C4129"></div>
                 <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-chymo-lot" class="text-input" placeholder="Lot #"></div>
-                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-chymo-target" value="25" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-chymo-target" placeholder="25" min="0" oninput="recalcAll()"></div>
                 <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-chymo-activity" placeholder="e.g. 40" min="0" oninput="recalcAll()"></div>
               </div>
               <div class="enzyme-calc-row">
@@ -848,7 +848,7 @@
               <div class="enzyme-grid">
                 <div class="enzyme-field"><label>Product</label><input type="text" id="int-lipase-product" class="text-input" placeholder="e.g. L3126"></div>
                 <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-lipase-lot" class="text-input" placeholder="Lot #"></div>
-                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-lipase-target" value="2000" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-lipase-target" placeholder="2000" min="0" oninput="recalcAll()"></div>
                 <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-lipase-activity" placeholder="e.g. 5000" min="0" oninput="recalcAll()"></div>
               </div>
               <div class="enzyme-calc-row">
@@ -869,7 +869,7 @@
               <div class="enzyme-grid">
                 <div class="enzyme-field"><label>Product</label><input type="text" id="int-colipase-product" class="text-input" placeholder="e.g. C3028"></div>
                 <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-colipase-lot" class="text-input" placeholder="Lot #"></div>
-                <div class="enzyme-field"><label>Target (U/mg)</label><input type="number" id="int-colipase-target" value="4000" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Target (U/mg)</label><input type="number" id="int-colipase-target" placeholder="0" min="0" oninput="recalcAll()"></div>
                 <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-colipase-activity" placeholder="e.g. 6000" min="0" oninput="recalcAll()"></div>
               </div>
               <div class="enzyme-calc-row">
@@ -889,7 +889,7 @@
               <div class="enzyme-grid">
                 <div class="enzyme-field"><label>Product</label><input type="text" id="int-intamylase-product" class="text-input" placeholder="Product name"></div>
                 <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-intamylase-lot" class="text-input" placeholder="Lot #"></div>
-                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-intamylase-target" value="200" min="0" oninput="recalcAll()"></div>
+                <div class="enzyme-field"><label>Target (U/mL)</label><input type="number" id="int-intamylase-target" placeholder="200" min="0" oninput="recalcAll()"></div>
                 <div class="enzyme-field"><label>Measured (U/mg)</label><input type="number" id="int-intamylase-activity" placeholder="e.g. 1500" min="0" oninput="recalcAll()"></div>
               </div>
               <div class="enzyme-calc-row">
@@ -915,7 +915,7 @@
           <div class="enzyme-grid">
             <div class="enzyme-field"><label>Product</label><input type="text" id="int-bile-product" class="text-input" placeholder="e.g. Sigma B8756"></div>
             <div class="enzyme-field"><label>Lot No.</label><input type="text" id="int-bile-lot" class="text-input" placeholder="Lot #"></div>
-            <div class="enzyme-field"><label>Target (mM)</label><input type="number" id="int-bile-conc-target" value="10" step="0.5" min="0" oninput="recalcAll()"></div>
+            <div class="enzyme-field"><label>Target (mM)</label><input type="number" id="int-bile-conc-target" placeholder="10" step="0.5" min="0" oninput="recalcAll()"></div>
             <div class="enzyme-field"><label>Measured (mmol/g)</label><input type="number" id="int-bile-measured" placeholder="e.g. 1.5" step="0.01" min="0" oninput="recalcAll()"></div>
           </div>
           <div class="enzyme-calc-row">
