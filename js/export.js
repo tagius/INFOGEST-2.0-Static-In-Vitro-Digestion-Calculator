@@ -4,7 +4,7 @@
  */
 
 export function exportXLSX(ctx) {
-  const { fv, sv, n1, fmt, gcv, gastricEnzyme, rgeOnly, intEnzyme, foodMode } = ctx;
+  const { fv, sv, n1, fmt, gcv, gastricEnzyme, rgeOnly, intEnzyme, foodMode, getPhAdjData } = ctx;
   const wb = XLSX.utils.book_new();
   const N = parseInt(document.getElementById('nSamples').value) || 3;
   const N1 = N + 1;
@@ -177,6 +177,46 @@ export function exportXLSX(ctx) {
       ['Dissolve in SGF', '', gcv('gastric-pepsin-diss-s'), gcv('gastric-pepsin-diss-stk'), 'mL'],
     );
   }
+  // pH Adjustment Log — Gastric
+  const gPhAdj = getPhAdjData ? getPhAdjData('gastric') : [];
+  if (gPhAdj.length > 0) {
+    gRows.push(
+      [''],
+      ['PH ADJUSTMENT LOG — GASTRIC'],
+      ['Sample', 'Start pH', 'Adj 1 (µL)', 'pH bef. Adj 2', 'Adj 2 (µL)', 'End pH', 'pH Drift', 'Total acid/base (mL)', 'Water (mL)'],
+    );
+    let sAdj1 = 0, sAdj2 = 0, sTotal = 0, sWater = 0, sSph = 0, sMph = 0, sEph = 0, sDrift = 0, phCnt = 0;
+    gPhAdj.forEach(r => {
+      gRows.push([
+        r.name || '',
+        r.startPh || '',
+        r.adj1_uL,
+        r.midPh || '',
+        r.adj2_uL,
+        r.endPh || '',
+        r.drift !== null ? fmt(r.drift, 2) : '',
+        fmt(r.totalAcid, 3),
+        fmt(r.water, 3),
+      ]);
+      sAdj1 += r.adj1_uL; sAdj2 += r.adj2_uL; sTotal += r.totalAcid; sWater += r.water;
+      if (r.startPh) { sSph += r.startPh; phCnt++; }
+      if (r.midPh) sMph += r.midPh;
+      if (r.endPh) sEph += r.endPh;
+      if (r.drift !== null) sDrift += r.drift;
+    });
+    const gn = gPhAdj.length, pc = phCnt || 1;
+    gRows.push([
+      'Average',
+      phCnt > 0 ? fmt(sSph / pc, 2) : '',
+      fmt(sAdj1 / gn, 1),
+      phCnt > 0 ? fmt(sMph / pc, 2) : '',
+      fmt(sAdj2 / gn, 1),
+      phCnt > 0 ? fmt(sEph / pc, 2) : '',
+      phCnt > 0 ? fmt(sDrift / pc, 2) : '',
+      fmt(sTotal / gn, 3),
+      fmt(sWater / gn, 3),
+    ]);
+  }
   XLSX.utils.book_append_sheet(wb, mkSheet(gRows), 'Gastric Phase');
 
   // ─────────────────────────────────────────────────
@@ -270,6 +310,46 @@ export function exportXLSX(ctx) {
     ['Effective weighed', '', sv('int-bile-eff') || '—', '', 'mg'],
     ['Dissolve in SIF', '', gcv('int-bile-diss-s'), '', 'mL'],
   );
+  // pH Adjustment Log — Intestinal
+  const iPhAdj = getPhAdjData ? getPhAdjData('int') : [];
+  if (iPhAdj.length > 0) {
+    iRows.push(
+      [''],
+      ['PH ADJUSTMENT LOG — INTESTINAL'],
+      ['Sample', 'Start pH', 'Adj 1 (µL)', 'pH bef. Adj 2', 'Adj 2 (µL)', 'End pH', 'pH Drift', 'Total acid/base (mL)', 'Water (mL)'],
+    );
+    let sAdj1 = 0, sAdj2 = 0, sTotal = 0, sWater = 0, sSph = 0, sMph = 0, sEph = 0, sDrift = 0, phCnt = 0;
+    iPhAdj.forEach(r => {
+      iRows.push([
+        r.name || '',
+        r.startPh || '',
+        r.adj1_uL,
+        r.midPh || '',
+        r.adj2_uL,
+        r.endPh || '',
+        r.drift !== null ? fmt(r.drift, 2) : '',
+        fmt(r.totalAcid, 3),
+        fmt(r.water, 3),
+      ]);
+      sAdj1 += r.adj1_uL; sAdj2 += r.adj2_uL; sTotal += r.totalAcid; sWater += r.water;
+      if (r.startPh) { sSph += r.startPh; phCnt++; }
+      if (r.midPh) sMph += r.midPh;
+      if (r.endPh) sEph += r.endPh;
+      if (r.drift !== null) sDrift += r.drift;
+    });
+    const in_ = iPhAdj.length, pc = phCnt || 1;
+    iRows.push([
+      'Average',
+      phCnt > 0 ? fmt(sSph / pc, 2) : '',
+      fmt(sAdj1 / in_, 1),
+      phCnt > 0 ? fmt(sMph / pc, 2) : '',
+      fmt(sAdj2 / in_, 1),
+      phCnt > 0 ? fmt(sEph / pc, 2) : '',
+      phCnt > 0 ? fmt(sDrift / pc, 2) : '',
+      fmt(sTotal / in_, 3),
+      fmt(sWater / in_, 3),
+    ]);
+  }
   XLSX.utils.book_append_sheet(wb, mkSheet(iRows), 'Intestinal Phase');
 
   // ─────────────────────────────────────────────────

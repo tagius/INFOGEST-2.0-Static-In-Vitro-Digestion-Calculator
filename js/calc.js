@@ -914,6 +914,41 @@ export function generateIntestinalWarnings(result) {
 
 
 // ═══════════════════════════════════════════════════════
+// PH ADJUSTMENT LOG
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Calculate per-sample water volumes for the pH adjustment log.
+ * The user enters actual acid/base volumes for two adjustments per sample.
+ * Water is added only once, after Adjustment 2, to top up to the target volume.
+ *
+ * Formula: perSampleWater = standardWater + (expectedAcid - totalAcid_mL)
+ * This keeps the total volume constant per sample regardless of individual acid use.
+ *
+ * @param {number} standardWater - Standard water volume from comp table (mL)
+ * @param {number} expectedAcid  - Expected acid/base from the single comp-table input (mL)
+ * @param {number} targetPh      - Protocol target pH for this phase (e.g. 3.0 gastric, 7.0 intestinal)
+ * @param {Array<{adj1: number, adj2: number, startPh?: number, midPh?: number, endPh?: number, name?: string}>} sampleAdjs
+ *   adj1 and adj2 are in µL; startPh/midPh/endPh are optional pH readings.
+ * @returns {Array<{adj1_uL, adj2_uL, adj1_mL, adj2_mL, totalAcid, water, drift, startPh, midPh, endPh, name}>}
+ */
+export function calcPhAdjustments(standardWater, expectedAcid, targetPh, sampleAdjs) {
+  return sampleAdjs.map(s => {
+    const adj1_uL = s.adj1 || 0;
+    const adj2_uL = s.adj2 || 0;
+    const adj1_mL = adj1_uL / 1000;
+    const adj2_mL = adj2_uL / 1000;
+    const totalAcid = adj1_mL + adj2_mL;
+    const water = standardWater + (expectedAcid - totalAcid);
+    const endPh = s.endPh || null;
+    const midPh = s.midPh || null;
+    // drift = pH before Adj 2 − target pH (signed: positive means pH drifted above target)
+    const drift = (midPh !== null) ? midPh - targetPh : null;
+    return { adj1_uL, adj2_uL, adj1_mL, adj2_mL, totalAcid, water, drift, startPh: s.startPh || null, midPh, endPh, name: s.name || '' };
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 // FORMATTING HELPERS
 // ═══════════════════════════════════════════════════════
 

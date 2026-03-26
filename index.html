@@ -30,8 +30,8 @@
   <div class="header-actions">
     <button id="btn-reset" class="btn btn-ghost"><span>↺</span> <span>Reset</span></button>
     <button id="btn-export" class="btn btn-export"><span>⬇</span> <span>Export .xlsx</span></button>
-    <button id="btn-export-json" class="btn btn-ghost">Export JSON</button>
-    <button id="btn-import-json" class="btn btn-ghost">Import JSON</button>
+    <button id="btn-export-json" class="btn btn-ghost">💾 Save values</button>
+    <button id="btn-import-json" class="btn btn-ghost">⬆️ Load values</button>
     <button id="theme-toggle-btn" class="theme-toggle" title="Toggle theme">
       <span class="icon-sun">☀️</span>
       <span class="icon-moon">🌙</span>
@@ -69,6 +69,18 @@
     <span class="step-num">3</span>
     <span class="step-label">Intestinal</span>
     <span class="step-badge">pH 7.0 · 120 min</span>
+  </div>
+  <div class="step-conn">›</div>
+  <div class="step-tab optional" id="tab-3">
+    <span class="step-num">4</span>
+    <span class="step-label">Inactivation</span>
+    <span class="step-badge">85°C · 15 min · optional</span>
+  </div>
+  <div class="step-conn">›</div>
+  <div class="step-tab optional" id="tab-4">
+    <span class="step-num">5</span>
+    <span class="step-label">Centrifugation</span>
+    <span class="step-badge">10,000 × g · 30 min · optional</span>
   </div>
   <div class="stepper-legend">
     <span><span class="legend-swatch" style="background:var(--calc-bg);border:1px solid var(--border);"></span>Calculated</span>
@@ -388,6 +400,34 @@
       </tbody>
     </table>
 
+    <button class="ph-adj-toggle" id="gastric-ph-adj-toggle" onclick="togglePhAdj('gastric')">
+      <span class="ph-adj-chevron" id="gastric-ph-adj-chevron">&#9654;</span>
+      <span class="ph-adj-toggle-label">pH Adjustment Log</span>
+      <span class="ph-adj-badge" id="gastric-ph-adj-badge"></span>
+    </button>
+    <div class="ph-adj-section" id="gastric-ph-adj-section" style="display:none">
+      <div class="ph-adj-info">
+        Track actual acid/base volumes per sample. <strong>Adj 1</strong> = initial pH at t=0. <strong>Adj 2</strong> = re-adjustment at t=30 min. Water (mQ) is added <strong>once</strong>, after Adj 2.
+      </div>
+      <table class="ph-adj-table">
+        <thead>
+          <tr>
+            <th>Sample</th>
+            <th class="r">Start pH</th>
+            <th class="r">Adj 1 (µL)<br><span class="ph-adj-th-note">t=0</span></th>
+            <th class="r">pH bef. Adj 2</th>
+            <th class="r">Adj 2 (µL)<br><span class="ph-adj-th-note">t=30 min</span></th>
+            <th class="r">End pH</th>
+            <th class="r">pH Drift</th>
+            <th class="r">Total (mL)</th>
+            <th class="r">Water (mL)</th>
+          </tr>
+        </thead>
+        <tbody id="gastric-ph-adj-tbody"></tbody>
+      </table>
+      <div class="warnings-area" id="gastric-ph-adj-warnings"></div>
+    </div>
+
     <div class="info-row">
       <div class="info-field"><label>pH</label><span class="calc-value" style="min-width:36px">3.0</span></div>
       <div class="info-field"><label>Duration</label><input type="number" id="gastric-duration" style="width:52px"><span class="unit">min</span></div>
@@ -665,6 +705,34 @@
       </tbody>
     </table>
 
+    <button class="ph-adj-toggle" id="int-ph-adj-toggle" onclick="togglePhAdj('int')">
+      <span class="ph-adj-chevron" id="int-ph-adj-chevron">&#9654;</span>
+      <span class="ph-adj-toggle-label">pH Adjustment Log</span>
+      <span class="ph-adj-badge" id="int-ph-adj-badge"></span>
+    </button>
+    <div class="ph-adj-section" id="int-ph-adj-section" style="display:none">
+      <div class="ph-adj-info">
+        Track actual acid/base volumes per sample. <strong>Adj 1</strong> = initial pH at t=0. <strong>Adj 2</strong> = re-adjustment at t=30 min. Water (mQ) is added <strong>once</strong>, after Adj 2.
+      </div>
+      <table class="ph-adj-table">
+        <thead>
+          <tr>
+            <th>Sample</th>
+            <th class="r">Start pH</th>
+            <th class="r">Adj 1 (µL)<br><span class="ph-adj-th-note">t=0</span></th>
+            <th class="r">pH bef. Adj 2</th>
+            <th class="r">Adj 2 (µL)<br><span class="ph-adj-th-note">t=30 min</span></th>
+            <th class="r">End pH</th>
+            <th class="r">pH Drift</th>
+            <th class="r">Total (mL)</th>
+            <th class="r">Water (mL)</th>
+          </tr>
+        </thead>
+        <tbody id="int-ph-adj-tbody"></tbody>
+      </table>
+      <div class="warnings-area" id="int-ph-adj-warnings"></div>
+    </div>
+
     <div class="info-row">
       <div class="info-field"><label>pH</label><span class="calc-value" style="min-width:36px">7.0</span></div>
       <div class="info-field"><label>Duration</label><input type="number" id="int-duration" style="width:52px"><span class="unit">min</span></div>
@@ -865,6 +933,58 @@
     </div>
   </div>
 </div><!-- /phase-2 -->
+
+<!-- ══════════════════════════════════════════
+     PHASE 3 — ENZYME INACTIVATION (Optional)
+══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-3">
+  <div class="panel optional-panel">
+    <div class="section-header">
+      <span class="panel-title">Enzyme Inactivation</span>
+      <span class="optional-badge">Optional</span>
+    </div>
+    <div class="procedure-note procedure-note--warn">
+      Skip this step for microalgae samples.
+    </div>
+    <ol class="procedure-steps">
+      <li>Set the water bath in Room D11.1-3 (Patrick's lab) to <strong>85&thinsp;°C</strong> and allow approx. 30 min to stabilize.</li>
+      <li>Verify the temperature using the pH meter probe from the Chem lab.</li>
+      <li>Place food samples in the water bath for <strong>15 min</strong>, then transfer immediately onto ice.</li>
+    </ol>
+  </div>
+</div><!-- /phase-3 -->
+
+<!-- ══════════════════════════════════════════
+     PHASE 4 — CENTRIFUGATION (Optional)
+══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-4">
+  <div class="panel optional-panel">
+    <div class="section-header">
+      <span class="panel-title">Centrifugation</span>
+      <span class="optional-badge">Optional</span>
+    </div>
+    <div class="procedure-fractions">
+      <div class="fraction-card">
+        <span class="fraction-label">Full digest</span>
+        <span class="fraction-value">≈ 3/8</span>
+        <span class="fraction-desc">of total digest volume</span>
+      </div>
+      <div class="fraction-card">
+        <span class="fraction-label">Supernatant</span>
+        <span class="fraction-value">≈ 5/8</span>
+        <span class="fraction-desc">of total digest volume</span>
+      </div>
+    </div>
+    <ol class="procedure-steps">
+      <li>Prepare labeled containers in advance (full digest, supernatant, pellet).</li>
+      <li>Pre-cool the large centrifuge in the microbiology lab to <strong>4&thinsp;°C</strong> (approx. 15 min).</li>
+      <li>After intestinal incubation (2 h), stop shaking and aliquot approx. <strong>3/8</strong> of each sample into full-digest tubes.</li>
+      <li>Centrifuge the remaining fraction for <strong>30 min at 10,000 &times; g, 4&thinsp;°C</strong>. Balance the centrifuge properly.</li>
+      <li>Transfer the supernatant to labeled containers; keep the pellet in the digestion tube.</li>
+      <li>Freeze all fractions: tape together corresponding full digest, supernatant, and pellet tubes. Label with name, date, and content. Store at <strong>&minus;20&thinsp;°C</strong> (short-term) or <strong>&minus;80&thinsp;°C</strong> (long-term).</li>
+    </ol>
+  </div>
+</div><!-- /phase-4 -->
 
 </div><!-- /content -->
 

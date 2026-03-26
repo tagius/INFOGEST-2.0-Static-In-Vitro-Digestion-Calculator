@@ -13,6 +13,7 @@ import {
   generateGastricWarnings,
   generateEnzymeWarnings,
   generateIntestinalWarnings,
+  calcPhAdjustments,
   fmt,
   fmtVolume,
 } from './calc.js';
@@ -32,9 +33,11 @@ let amylaseSource = 'powder';    // 'powder' | 'solution'
 let salivaryCarrier = 'solution'; // 'solution' | 'water' (algae-only)
 let finishedClicked = false;     // flag to track if "Finish & Export" has been clicked, to prevent multiple exports
 let defaultsData = null;         // stores loaded defaults from JSON
+let gastricPhAdjOpen = false;    // pH adjustment log open state for gastric phase
+let intPhAdjOpen = false;        // pH adjustment log open state for intestinal phase
 let bugReportURL = 'https://sfp-apnh.notion.site/32dfe013d6a1801f83e7e5a705bcb3c9';
 
-const phaseNames = ['Oral', 'Gastric', 'Intestinal'];
+const phaseNames = ['Oral', 'Gastric', 'Intestinal', 'Inactivation', 'Centrifugation'];
 
 // ═══════════════════════════════════════════════════════
 // HELPERS
@@ -141,7 +144,7 @@ function goToPhase(n) {
   const next = document.getElementById('btn-next');
   if (prev) prev.disabled = (n === 0);
   if (next) {
-    if (n === 2) {
+    if (n === 2 || n === 4) {
       next.disabled = false;  // Ensure it's enabled
       next.textContent = 'Finished';
       next.className = 'btn btn-primary';
@@ -778,6 +781,290 @@ function calcInt() {
 // ═══════════════════════════════════════════════════════
 // MASTER RECALC
 // ═══════════════════════════════════════════════════════
+// PH ADJUSTMENT LOG
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Toggle the pH adjustment log section for a phase.
+ * @param {string} phase - 'gastric' | 'int'
+ */
+function togglePhAdj(phase) {
+  const isOpen = phase === 'gastric' ? gastricPhAdjOpen : intPhAdjOpen;
+  const newOpen = !isOpen;
+  if (phase === 'gastric') gastricPhAdjOpen = newOpen;
+  else intPhAdjOpen = newOpen;
+
+  const section = document.getElementById(phase + '-ph-adj-section');
+  const chevron = document.getElementById(phase + '-ph-adj-chevron');
+  if (section) section.style.display = newOpen ? '' : 'none';
+  if (chevron) chevron.classList.toggle('open', newOpen);
+
+  if (newOpen) {
+    buildPhAdjTable(phase);
+    recalcPhAdj(phase);
+  }
+  persistState();
+}
+window.togglePhAdj = togglePhAdj;
+
+/** Helper to read a DOM input value as float (returns 0 if empty/NaN). */
+function fvEl(el) { return el ? (parseFloat(el.value) || 0) : 0; }
+
+/**
+ * Build or update the pH adjustment table rows to match nSamples.
+ * Preserves existing input values when rows are added/removed.
+ * @param {string} phase - 'gastric' | 'int'
+ */
+function buildPhAdjTable(phase) {
+  const n = parseInt(document.getElementById('nSamples').value) || 3;
+  const tbody = document.getElementById(phase + '-ph-adj-tbody');
+  if (!tbody) return;
+
+  const currentRows = tbody.querySelectorAll('tr.ph-adj-data-row').length;
+
+  if (currentRows < n) {
+    for (let i = currentRows; i < n; i++) {
+      const tr = document.createElement('tr');
+      tr.className = 'ph-adj-data-row';
+      tr.innerHTML = `
+        <td><input type="text" id="${phase}-phadj-${i}-name" value="S${i + 1}" class="ph-adj-name-input"></td>
+        <td class="r"><input type="number" id="${phase}-phadj-${i}-start-ph" min="0" max="14" step="0.01" style="width:48px"></td>
+        <td class="r"><input type="number" id="${phase}-phadj-${i}-adj1" min="0" step="1" style="width:52px"></td>
+        <td class="r"><input type="number" id="${phase}-phadj-${i}-mid-ph" min="0" max="14" step="0.01" style="width:48px"></td>
+        <td class="r"><input type="number" id="${phase}-phadj-${i}-adj2" min="0" step="1" style="width:52px"></td>
+        <td class="r"><input type="number" id="${phase}-phadj-${i}-end-ph" min="0" max="14" step="0.01" style="width:48px"></td>
+        <td class="r"><span class="calc-value" id="${phase}-phadj-${i}-drift">—</span></td>
+        <td class="r"><span class="calc-value" id="${phase}-phadj-${i}-total">—</span></td>
+        <td class="r"><span class="calc-value" id="${phase}-phadj-${i}-water">—</span></td>`;
+      tbody.insertBefore(tr, tbody.querySelector('tr.ph-adj-avg-row'));
+
+      // Bind events via addEventListener (no inline oninput)
+      tr.querySelectorAll('input').forEach(el => {
+        el.addEventListener('input', () => { recalcPhAdj(phase); persistState(); });
+        el.addEventListener('change', persistState);
+      });
+    }
+  } else if (currentRows > n) {
+    const dataRows = tbody.querySelectorAll('tr.ph-adj-data-row');
+    for (let i = n; i < dataRows.length; i++) {
+      tbody.removeChild(dataRows[i]);
+    }
+  }
+
+  // Ensure avg row exists
+  let avgRow = tbody.querySelector('tr.ph-adj-avg-row');
+  if (!avgRow) {
+    avgRow = document.createElement('tr');
+    avgRow.className = 'ph-adj-avg-row';
+    avgRow.innerHTML = `
+      <td class="sample-label">Avg</td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-start-ph">—</span></td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-adj1">—</span></td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-mid-ph">—</span></td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-adj2">—</span></td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-end-ph">—</span></td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-drift">—</span></td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-total">—</span></td>
+      <td class="r"><span class="calc-value" id="${phase}-phadj-avg-water">—</span></td>`;
+    tbody.appendChild(avgRow);
+  }
+}
+
+/**
+ * Recalculate all derived values for every row in a pH adjustment table.
+ * @param {string} phase - 'gastric' | 'int'
+ */
+function recalcPhAdj(phase) {
+  const tbody = document.getElementById(phase + '-ph-adj-tbody');
+  if (!tbody) return;
+
+  const n = tbody.querySelectorAll('tr.ph-adj-data-row').length;
+  if (n === 0) return;
+
+  // Standard water (mL), expected acid (mL), and protocol target pH from the comp table
+  const waterEl = document.getElementById(phase + '-water');
+  const standardWater = parseFloat(waterEl ? waterEl.textContent.replace('—', '') : '') || 0;
+  const expectedAcid = phase === 'gastric' ? fv('gastric-acid') : fv('int-base');
+  const targetPh = phase === 'gastric' ? 3.0 : 7.0;
+
+  // Collect per-sample inputs (adj in µL, pH values)
+  const sampleAdjs = [];
+  for (let i = 0; i < n; i++) {
+    sampleAdjs.push({
+      adj1:    fv(phase + '-phadj-' + i + '-adj1'),
+      adj2:    fv(phase + '-phadj-' + i + '-adj2'),
+      startPh: fvEl(document.getElementById(phase + '-phadj-' + i + '-start-ph')),
+      midPh:   fvEl(document.getElementById(phase + '-phadj-' + i + '-mid-ph')),
+      endPh:   fvEl(document.getElementById(phase + '-phadj-' + i + '-end-ph')),
+      name:    sv(phase + '-phadj-' + i + '-name'),
+    });
+  }
+
+  const results = calcPhAdjustments(standardWater, expectedAcid, targetPh, sampleAdjs);
+
+  // Track sums for averages
+  let sumAdj1 = 0, sumAdj2 = 0, sumTotal = 0, sumWater = 0;
+  let sumStartPh = 0, sumMidPh = 0, sumEndPh = 0, sumDrift = 0;
+  let phCount = 0;
+  const warnings = [];
+
+  results.forEach((r, i) => {
+    const driftEl  = document.getElementById(phase + '-phadj-' + i + '-drift');
+    const totalEl  = document.getElementById(phase + '-phadj-' + i + '-total');
+    const waterSpan = document.getElementById(phase + '-phadj-' + i + '-water');
+
+    if (driftEl) driftEl.textContent = r.drift !== null ? fmt(r.drift, 2) : '—';
+    if (totalEl) totalEl.textContent = fmt(r.totalAcid, 3);
+    if (waterSpan) {
+      waterSpan.textContent = fmt(r.water, 3);
+      waterSpan.classList.toggle('error', r.water < 0);
+    }
+
+    if (r.water < 0) {
+      const sampleName = sv(phase + '-phadj-' + i + '-name') || ('S' + (i + 1));
+      warnings.push(`${sampleName}: acid/base total (${fmt(r.totalAcid, 3)} mL) exceeds available water. Check volumes.`);
+    }
+
+    sumAdj1  += r.adj1_uL;
+    sumAdj2  += r.adj2_uL;
+    sumTotal += r.totalAcid;
+    sumWater += r.water;
+    if (r.startPh) { sumStartPh += r.startPh; phCount++; }
+    if (r.midPh)   sumMidPh += r.midPh;
+    if (r.endPh)   sumEndPh += r.endPh;
+    if (r.drift !== null) sumDrift += r.drift;
+  });
+
+  // Averages
+  const cnt = phCount || 1;
+  const avgSuffix = (id, val, dec) => { const el = document.getElementById(id); if (el) el.textContent = val > 0 ? fmt(val, dec) : '—'; };
+  avgSuffix(phase + '-phadj-avg-start-ph', sumStartPh / cnt, 2);
+  avgSuffix(phase + '-phadj-avg-mid-ph',   sumMidPh / cnt, 2);
+  avgSuffix(phase + '-phadj-avg-end-ph',   sumEndPh / cnt, 2);
+  avgSuffix(phase + '-phadj-avg-drift',    sumDrift / cnt, 2);
+  const avgAdj1El  = document.getElementById(phase + '-phadj-avg-adj1');
+  const avgAdj2El  = document.getElementById(phase + '-phadj-avg-adj2');
+  const avgTotalEl = document.getElementById(phase + '-phadj-avg-total');
+  const avgWaterEl = document.getElementById(phase + '-phadj-avg-water');
+  if (avgAdj1El)  avgAdj1El.textContent  = fmt(sumAdj1 / n, 1);
+  if (avgAdj2El)  avgAdj2El.textContent  = fmt(sumAdj2 / n, 1);
+  if (avgTotalEl) avgTotalEl.textContent = fmt(sumTotal / n, 3);
+  if (avgWaterEl) avgWaterEl.textContent = fmt(sumWater / n, 3);
+
+  // Render warnings below the table
+  const warnDiv = document.getElementById(phase + '-ph-adj-warnings');
+  if (warnDiv) {
+    warnDiv.innerHTML = warnings.map(msg =>
+      `<div class="warn-item warn-error"><span class="warn-icon">⚠</span><span>${msg}</span></div>`
+    ).join('');
+  }
+
+  updatePhAdjBadge(phase);
+}
+window.recalcPhAdj = recalcPhAdj;
+
+/**
+ * Update the badge on the toggle button to show filled sample count.
+ * @param {string} phase - 'gastric' | 'int'
+ */
+function updatePhAdjBadge(phase) {
+  const badge = document.getElementById(phase + '-ph-adj-badge');
+  if (!badge) return;
+  const tbody = document.getElementById(phase + '-ph-adj-tbody');
+  if (!tbody) return;
+  let filled = 0;
+  const rows = tbody.querySelectorAll('tr.ph-adj-data-row');
+  rows.forEach((_, i) => {
+    const a1 = fv(phase + '-phadj-' + i + '-adj1');
+    const a2 = fv(phase + '-phadj-' + i + '-adj2');
+    const sp = fvEl(document.getElementById(phase + '-phadj-' + i + '-start-ph'));
+    if (a1 > 0 || a2 > 0 || sp > 0) filled++;
+  });
+  const n = rows.length;
+  if (filled > 0) {
+    badge.textContent = filled + '/' + n + ' samples';
+    badge.classList.add('visible');
+  } else {
+    badge.textContent = '';
+    badge.classList.remove('visible');
+  }
+}
+
+/**
+ * Collect pH adjustment data for state persistence.
+ * @param {string} phase
+ * @returns {Array}
+ */
+function collectPhAdjData(phase) {
+  const tbody = document.getElementById(phase + '-ph-adj-tbody');
+  if (!tbody) return [];
+  const rows = tbody.querySelectorAll('tr.ph-adj-data-row');
+  const data = [];
+  rows.forEach((_, i) => {
+    data.push({
+      name:    sv(phase + '-phadj-' + i + '-name'),
+      adj1:    fv(phase + '-phadj-' + i + '-adj1'),
+      adj2:    fv(phase + '-phadj-' + i + '-adj2'),
+      startPh: fvEl(document.getElementById(phase + '-phadj-' + i + '-start-ph')),
+      midPh:   fvEl(document.getElementById(phase + '-phadj-' + i + '-mid-ph')),
+      endPh:   fvEl(document.getElementById(phase + '-phadj-' + i + '-end-ph')),
+    });
+  });
+  return data;
+}
+
+/**
+ * Restore pH adjustment data from saved state.
+ * @param {string} phase
+ * @param {Array} data
+ */
+function restorePhAdjData(phase, data) {
+  if (!data || !data.length) return;
+  buildPhAdjTable(phase);
+  data.forEach((s, i) => {
+    const setEl = (suffix, val) => {
+      const el = document.getElementById(phase + '-phadj-' + i + '-' + suffix);
+      if (el && val !== undefined && val !== null && val !== 0 && val !== '') el.value = val;
+    };
+    setEl('name', s.name);
+    setEl('adj1', s.adj1);
+    setEl('adj2', s.adj2);
+    setEl('start-ph', s.startPh);
+    setEl('mid-ph',   s.midPh);
+    setEl('end-ph',   s.endPh);
+  });
+  recalcPhAdj(phase);
+}
+
+/**
+ * Get pH adjustment computed results for export (includes drift, water, all fields).
+ * @param {string} phase
+ * @returns {Array}
+ */
+function getPhAdjData(phase) {
+  const tbody = document.getElementById(phase + '-ph-adj-tbody');
+  if (!tbody) return [];
+  const n = tbody.querySelectorAll('tr.ph-adj-data-row').length;
+  if (n === 0) return [];
+  const waterEl = document.getElementById(phase + '-water');
+  const standardWater = parseFloat(waterEl ? waterEl.textContent.replace('—', '') : '') || 0;
+  const expectedAcid = phase === 'gastric' ? fv('gastric-acid') : fv('int-base');
+  const targetPh = phase === 'gastric' ? 3.0 : 7.0;
+  const sampleAdjs = [];
+  for (let i = 0; i < n; i++) {
+    sampleAdjs.push({
+      name:    sv(phase + '-phadj-' + i + '-name') || ('S' + (i + 1)),
+      adj1:    fv(phase + '-phadj-' + i + '-adj1'),
+      adj2:    fv(phase + '-phadj-' + i + '-adj2'),
+      startPh: fvEl(document.getElementById(phase + '-phadj-' + i + '-start-ph')),
+      midPh:   fvEl(document.getElementById(phase + '-phadj-' + i + '-mid-ph')),
+      endPh:   fvEl(document.getElementById(phase + '-phadj-' + i + '-end-ph')),
+    });
+  }
+  return calcPhAdjustments(standardWater, expectedAcid, targetPh, sampleAdjs);
+}
+
+// ═══════════════════════════════════════════════════════
 function recalcAll() {
   calcOral();
   calcGastric();
@@ -794,6 +1081,16 @@ function recalcAll() {
   const info = document.getElementById('footer-info');
   if (info) info.textContent = `n=${n} · Oral ${fmt(oralTotal, 1)} mL → Gastric ${fmt(gastricTotal, 1)} mL → Intestinal ${fmt(intTotal, 1)} mL`;
 
+  // Rebuild pH adj tables if nSamples changed, then recalc
+  if (gastricPhAdjOpen) {
+    buildPhAdjTable('gastric');
+    recalcPhAdj('gastric');
+  }
+  if (intPhAdjOpen) {
+    buildPhAdjTable('int');
+    recalcPhAdj('int');
+  }
+
   persistState();
 }
 
@@ -809,6 +1106,10 @@ function persistState() {
     __amylaseSource: amylaseSource,
     __salivaryCarrier: salivaryCarrier,
     __currentPhase: currentPhase,
+    __gastricPhAdjOpen: gastricPhAdjOpen,
+    __intPhAdjOpen: intPhAdjOpen,
+    __gastricPhAdjData: JSON.stringify(collectPhAdjData('gastric')),
+    __intPhAdjData: JSON.stringify(collectPhAdjData('int')),
   });
 }
 
@@ -820,6 +1121,7 @@ function getExportContext() {
     fv, sv, n1, fmt, setCV,
     gastricEnzyme, rgeOnly, intEnzyme, foodMode, amylaseSource,
     gcv: (id) => { const e = document.getElementById(id); return e ? e.textContent.trim() : ''; },
+    getPhAdjData,
   };
 }
 
@@ -1229,6 +1531,37 @@ export async function init() {
       salivaryCarrier = extra.__salivaryCarrier;
       setSalivaryCarrierToggleState(salivaryCarrier);
     }
+    // Restore pH adjustment log
+    if (extra.__gastricPhAdjData) {
+      try {
+        const data = JSON.parse(extra.__gastricPhAdjData);
+        if (data.length > 0) {
+          restorePhAdjData('gastric', data);
+          if (extra.__gastricPhAdjOpen) {
+            gastricPhAdjOpen = true;
+            const section = document.getElementById('gastric-ph-adj-section');
+            const chevron = document.getElementById('gastric-ph-adj-chevron');
+            if (section) section.style.display = '';
+            if (chevron) chevron.classList.add('open');
+          }
+        }
+      } catch (e) { /* ignore parse errors */ }
+    }
+    if (extra.__intPhAdjData) {
+      try {
+        const data = JSON.parse(extra.__intPhAdjData);
+        if (data.length > 0) {
+          restorePhAdjData('int', data);
+          if (extra.__intPhAdjOpen) {
+            intPhAdjOpen = true;
+            const section = document.getElementById('int-ph-adj-section');
+            const chevron = document.getElementById('int-ph-adj-chevron');
+            if (section) section.style.display = '';
+            if (chevron) chevron.classList.add('open');
+          }
+        }
+      } catch (e) { /* ignore parse errors */ }
+    }
   }
 
   // Run initial calculation
@@ -1249,12 +1582,13 @@ export async function init() {
   });
   document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
   document.getElementById('btn-prev')?.addEventListener('click', () => { if (currentPhase > 0) goToPhase(currentPhase - 1); });
-  document.getElementById('btn-next')?.addEventListener('click', () => { if (currentPhase < 2) goToPhase(currentPhase + 1); });
+  const nextBtn = document.getElementById('btn-next');
+  if (nextBtn) nextBtn.onclick = () => goToPhase(1);
   document.getElementById('btn-bug')?.addEventListener('click', () => {
     const popup = window.open(bugReportURL, '_blank', 'noopener,noreferrer'); });
 
-  // Stepper tabs
-  [0, 1, 2].forEach(i => {
+  // Stepper tabs (includes optional tabs 3 & 4)
+  [0, 1, 2, 3, 4].forEach(i => {
     document.getElementById('tab-' + i)?.addEventListener('click', () => goToPhase(i));
   });
 }
