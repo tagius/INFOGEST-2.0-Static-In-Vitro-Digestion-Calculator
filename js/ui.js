@@ -817,17 +817,21 @@ function fvEl(el) { return el ? (parseFloat(el.value) || 0) : 0; }
  */
 function buildPhAdjTable(phase) {
   const n = parseInt(document.getElementById('nSamples').value) || 3;
+  // n+1: last row is always the blank sample (stock preparation uses n+1)
+  const total = n + 1;
   const tbody = document.getElementById(phase + '-ph-adj-tbody');
   if (!tbody) return;
 
   const currentRows = tbody.querySelectorAll('tr.ph-adj-data-row').length;
 
-  if (currentRows < n) {
-    for (let i = currentRows; i < n; i++) {
+  if (currentRows < total) {
+    for (let i = currentRows; i < total; i++) {
+      const isBlank = (i === n);
+      const defaultName = isBlank ? 'Blank' : 'S' + (i + 1);
       const tr = document.createElement('tr');
-      tr.className = 'ph-adj-data-row';
+      tr.className = 'ph-adj-data-row' + (isBlank ? ' ph-adj-blank-row' : '');
       tr.innerHTML = `
-        <td><input type="text" id="${phase}-phadj-${i}-name" value="S${i + 1}" class="ph-adj-name-input"></td>
+        <td><input type="text" id="${phase}-phadj-${i}-name" value="${defaultName}" class="ph-adj-name-input"></td>
         <td class="r"><input type="number" id="${phase}-phadj-${i}-start-ph" min="0" max="14" step="0.01" style="width:48px"></td>
         <td class="r"><input type="number" id="${phase}-phadj-${i}-adj1" min="0" step="1" style="width:52px"></td>
         <td class="r"><input type="number" id="${phase}-phadj-${i}-mid-ph" min="0" max="14" step="0.01" style="width:48px"></td>
@@ -838,18 +842,23 @@ function buildPhAdjTable(phase) {
         <td class="r"><span class="calc-value" id="${phase}-phadj-${i}-water">—</span></td>`;
       tbody.insertBefore(tr, tbody.querySelector('tr.ph-adj-avg-row'));
 
-      // Bind events via addEventListener (no inline oninput)
       tr.querySelectorAll('input').forEach(el => {
         el.addEventListener('input', () => { recalcPhAdj(phase); persistState(); });
         el.addEventListener('change', persistState);
       });
     }
-  } else if (currentRows > n) {
+  } else if (currentRows > total) {
     const dataRows = tbody.querySelectorAll('tr.ph-adj-data-row');
-    for (let i = n; i < dataRows.length; i++) {
+    for (let i = total; i < dataRows.length; i++) {
       tbody.removeChild(dataRows[i]);
     }
   }
+
+  // Keep blank row (last data row) always marked and in the right position
+  const dataRows = tbody.querySelectorAll('tr.ph-adj-data-row');
+  dataRows.forEach((row, i) => {
+    row.classList.toggle('ph-adj-blank-row', i === n);
+  });
 
   // Ensure avg row exists
   let avgRow = tbody.querySelector('tr.ph-adj-avg-row');
