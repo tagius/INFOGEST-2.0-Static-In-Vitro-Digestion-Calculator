@@ -510,6 +510,7 @@ export function calcIntestinalPancreatin(params) {
     pancreatinPurity,
     pancreatinEffective_mg,
     pancreatinEffective_stk_mg,
+    pancreatinStockConc_mgPerML,
     // Bile
     bileTarget_mM,
     bileMeasured_mmolPerG,
@@ -521,17 +522,13 @@ export function calcIntestinalPancreatin(params) {
   const N1 = nSamples + 1;
   const gastricIn = gastricFinalVol || 0;
 
-  const pancreatinVol = gastricIn / 4;
+  const stockConc = pancreatinStockConc_mgPerML || 100;
   const bileVol = gastricIn / 8;
-  const sif = gastricIn * 4 / 5 - pancreatinVol - bileVol;
   const cacl2_uL = gastricIn * 2;
   const cacl2_mL = cacl2_uL / 1000;
   const total = gastricIn * 2;
-  const water = gastricIn - sif - cacl2_mL - base - pancreatinVol - bileVol;
-  const finalVol = Math.max(0, total - sampling);
-  const mmPerSample = gastricIn;
 
-  // Pancreatin min weight
+  // Pancreatin min weight (computed first — pancreatinVol depends on it)
   const pPurity = pancreatinPurity || 1;
   const pAdjAct = (pancreatinActivity_UperMG || 0) * pPurity;
   let pancreatinMinWt = null, pancreatinMinWt_stk = null;
@@ -541,14 +538,25 @@ export function calcIntestinalPancreatin(params) {
     pancreatinMinWt = (total * pancreatinTarget_UperML) / pAdjAct;
     pancreatinMinWt_stk = pancreatinMinWt * N1;
   }
-  if (pancreatinMinWt && pancreatinMinWt > 0 && pancreatinVol > 0) {
-    if (pancreatinEffective_mg > 0) {
-      pancreatinDissolve = (pancreatinEffective_mg * pancreatinVol) / pancreatinMinWt;
-    }
-    if (pancreatinEffective_stk_mg > 0 && pancreatinMinWt_stk > 0) {
-      pancreatinDissolve_stk = (N1 * pancreatinEffective_stk_mg * pancreatinVol) / pancreatinMinWt_stk;
-    }
+
+  // Tube volume = minWt / stockConc → delivers exactly target activity (100 U/mL).
+  // Dissolve volume = effectiveMass / stockConc → total stock prep (excess unused).
+  // Fallback to protocol default (gastricIn/4) when activity not yet entered.
+  let pancreatinVol = gastricIn / 4;
+  if (pancreatinMinWt && pancreatinMinWt > 0 && stockConc > 0) {
+    pancreatinVol = pancreatinMinWt / stockConc;
   }
+  if (pancreatinEffective_mg > 0 && stockConc > 0) {
+    pancreatinDissolve = pancreatinEffective_mg / stockConc;
+  }
+  if (pancreatinEffective_stk_mg > 0 && stockConc > 0) {
+    pancreatinDissolve_stk = pancreatinEffective_stk_mg / stockConc;
+  }
+
+  const sif = gastricIn * 4 / 5 - pancreatinVol - bileVol;
+  const water = gastricIn - sif - cacl2_mL - base - pancreatinVol - bileVol;
+  const finalVol = Math.max(0, total - sampling);
+  const mmPerSample = gastricIn;
 
   // Bile min weight
   let bileMinWt = null, bileMinWt_stk = null;
@@ -894,6 +902,13 @@ export function generateIntestinalWarnings(result) {
     warnings.push({
       type: 'error',
       message: `Component volumes exceed total digest volume by ${fmt(Math.abs(result.water), 3)} mL. Use more concentrated acid/base or increase total volume.`
+    });
+  }
+  if (result.sif < -0.001) {
+    const budget = result.gastricIn * 4 / 5 - result.bileVol;
+    warnings.push({
+      type: 'error',
+      message: `Pancreatin solution volume (${fmt(result.pancreatinVol, 2)} mL) exceeds available SIF budget (${fmt(budget, 2)} mL). Increase pancreatin stock concentration or reduce target activity.`
     });
   }
   if (result.gastricIn <= 0) {

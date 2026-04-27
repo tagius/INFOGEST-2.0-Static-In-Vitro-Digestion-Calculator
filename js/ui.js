@@ -662,6 +662,7 @@ function calcInt() {
       pancreatinPurity: fv('int-pancreatin-purity') / 100 || 1,
       pancreatinEffective_mg: fv('int-pancreatin-eff'),
       pancreatinEffective_stk_mg: fv('int-pancreatin-eff-stk'),
+      pancreatinStockConc_mgPerML: fv('int-pancreatin-stock-conc') || 100,
       bileTarget_mM: fv('int-bile-conc-target'),
       bileMeasured_mmolPerG: fv('int-bile-measured'),
       bileEffective_mg: fv('int-bile-eff'),
@@ -1321,6 +1322,7 @@ async function loadDefaults() {
         setIfEmpty('int-pancreatin-target', p.target);
         setIfEmpty('int-pancreatin-eff', p.effective);
         setIfEmpty('int-pancreatin-eff-stk', p.effectiveStk);
+        setIfEmpty('int-pancreatin-stock-conc', p.stockConc);
       }
 
       if (d.intestinal.bile) {

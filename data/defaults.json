@@ -67,17 +67,18 @@
     "caTarget": 0.3,
     "pancreatin": {
       "product": "Sigma Pancreatin P7545",
-      "lot": "SLCF4576",
-      "activity": 8.462,
+      "lot": "0000512202",
+      "activity": 5.664,
       "purity": 100,
       "target": 100,
       "effective": 0,
-      "effectiveStk": 0
+      "effectiveStk": 0,
+      "stockConc": 53
     },
     "bile": {
-      "product": "Sigma Bile Bovine B8631",
-      "lot": "PCode 1003574574 (2023, 3.98 ~ 0.15 mmol/g)",
-      "measured": 3.98,
+      "product": "Sigma Bile Bovine B3883 (B8631)",
+      "lot": "0000461949 (2026-03)",
+      "measured": 2.6,
       "purity": 100,
       "target": 10,
       "effective": 0,
