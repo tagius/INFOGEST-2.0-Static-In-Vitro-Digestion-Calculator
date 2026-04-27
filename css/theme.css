@@ -335,6 +335,65 @@ html, body {
   transform: translateY(0);
 }
 
+/* Reusable info tooltip (icon + rich-content bubble on hover) */
+.info-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: middle;
+  cursor: help;
+  color: var(--muted);
+  outline: none;
+}
+.info-tooltip-wrap:hover,
+.info-tooltip-wrap:focus-visible { color: var(--accent); }
+
+.info-tooltip-icon { display: block; }
+
+.info-tooltip-bubble {
+  position: fixed;
+  top: 0;
+  left: auto;
+  right: 0;
+  min-width: 260px;
+  max-width: 340px;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  background: var(--text-primary);
+  color: var(--surface);
+  font-size: 11px;
+  line-height: 1.35;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 9999;
+  text-align: left;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.info-tooltip-wrap:hover .info-tooltip-bubble,
+.info-tooltip-wrap:focus-visible .info-tooltip-bubble {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.info-tooltip-title {
+  font-weight: 600;
+  font-size: 11px;
+  margin-bottom: 5px;
+  color: var(--surface);
+}
+.info-tooltip-list {
+  margin: 0;
+  padding-left: 16px;
+}
+.info-tooltip-list li + li { margin-top: 3px; }
+
 /* Theme toggle button */
 .theme-toggle {
   background: transparent;

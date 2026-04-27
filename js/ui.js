@@ -1598,6 +1598,32 @@ export async function init() {
   document.getElementById('btn-bug')?.addEventListener('click', () => {
     const popup = window.open(bugReportURL, '_blank', 'noopener,noreferrer'); });
 
+  // Info tooltips: position fixed, clamped to viewport (right border priority).
+  document.querySelectorAll('.info-tooltip-wrap').forEach(wrap => {
+    const bubble = wrap.querySelector('.info-tooltip-bubble');
+    if (!bubble) return;
+    const place = () => {
+      const m = 8;
+      const r = wrap.getBoundingClientRect();
+      const bw = bubble.offsetWidth;
+      const bh = bubble.offsetHeight;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let right = Math.max(m, vw - r.right);
+      let left = vw - right - bw;
+      if (left < m) { left = m; right = vw - bw - m; }
+      let top = r.bottom + m;
+      if (top + bh > vh - m) top = Math.max(m, r.top - bh - m);
+      bubble.style.left = left + 'px';
+      bubble.style.top = top + 'px';
+      bubble.style.right = 'auto';
+    };
+    wrap.addEventListener('mouseenter', place);
+    wrap.addEventListener('focusin', place);
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+  });
+
   // Stepper tabs (includes optional tabs 3 & 4)
   [0, 1, 2, 3, 4].forEach(i => {
     document.getElementById('tab-' + i)?.addEventListener('click', () => goToPhase(i));
